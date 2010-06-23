@@ -11,10 +11,31 @@ using System.Xml.Linq;
 namespace Std.Tweak
 {
     /// <summary>
-    /// Twitter API
+    /// Twitter API (version 1)
     /// </summary>
     public static class Api
     {
+        #region URI formatters
+
+        /// <summary>
+        /// Twitter api uri (v1)
+        /// </summary>
+        private static string TwitterUri { get { return "http://api.twitter.com/1/"; } }
+
+        /// <summary>
+        /// Formatting target uri and request api
+        /// </summary>
+        /// <remarks>
+        /// For twitter api version 1
+        /// </remarks>
+        private static XDocument RequestAPIv1(this CredentialProvider provider, string partial, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        {
+            var target = TwitterUri + (partial.EndsWith("/") ? partial.Substring(1) : partial);
+            return provider.RequestAPI(target, method, param);
+        }
+
+        #endregion
+
         #region Timelines
 
         /// <summary>
@@ -25,7 +46,7 @@ namespace Std.Tweak
         /// <param name="param">parameters</param>
         private static IEnumerable<TwitterStatus> GetTimeline(this CredentialProvider provider, string partialUri, IEnumerable<KeyValuePair<string, string>> param)
         {
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, param);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, param);
             if (doc == null)
                 return null;
             List<TwitterStatus> statuses = new List<TwitterStatus>();
@@ -117,7 +138,7 @@ namespace Std.Tweak
         private static TwitterStatus GetStatus(this CredentialProvider provider, string partialUriFormat, CredentialProvider.RequestMethod method, long id)
         {
             string partialUri = string.Format(partialUriFormat, id);
-            var doc = provider.RequestAPI(partialUri, method, null);
+            var doc = provider.RequestAPIv1(partialUri, method, null);
             if (doc == null)
                 return null;
             TwitterStatus s = TwitterStatus.CreateByNode(doc.Element("status"));
@@ -150,7 +171,7 @@ namespace Std.Tweak
             {
                 para.Add(new KeyValuePair<string, string>("in_reply_to_status_id", inReplyToStatusId.Value.ToString()));
             }
-            var doc = provider.RequestAPI("statuses/update.xml", CredentialProvider.RequestMethod.POST, para);
+            var doc = provider.RequestAPIv1("statuses/update.xml", CredentialProvider.RequestMethod.POST, para);
             if (doc != null)
                 return TwitterStatus.CreateByNode(doc.Element("status"));
             else
@@ -176,7 +197,7 @@ namespace Std.Tweak
         /// </summary>
         private static IEnumerable<TwitterDirectMessage> GetDirectMessages(this CredentialProvider provider, string partialUri, IEnumerable<KeyValuePair<string, string>> param)
         {
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, param);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, param);
             if (doc == null)
                 return null;
             List<TwitterStatus> statuses = new List<TwitterStatus>();
@@ -259,7 +280,7 @@ namespace Std.Tweak
             para.Add(new KeyValuePair<string, string>("text", Tweak.CredentialProviders.OAuth.UrlEncode(text, Encoding.UTF8, true)));
             para.Add(new KeyValuePair<string, string>("user", user));
 
-            var xmlDoc = provider.RequestAPI("direct_messages/new.xml", CredentialProvider.RequestMethod.POST, para);
+            var xmlDoc = provider.RequestAPIv1("direct_messages/new.xml", CredentialProvider.RequestMethod.POST, para);
             if (xmlDoc == null)
                 return null;
 
@@ -278,7 +299,7 @@ namespace Std.Tweak
         public static TwitterDirectMessage DestroyDirectMessage(this CredentialProvider provider, string id)
         {
             string partialUri = string.Format("direct_messages/destroy/{0}.xml", id);
-            var xmlDoc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.POST, null);
+            var xmlDoc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.POST, null);
             if (xmlDoc == null)
                 return null;
             var destroyed = TwitterDirectMessage.CreateByNode(xmlDoc.Element("direct_message"));
@@ -305,7 +326,7 @@ namespace Std.Tweak
             {
                 para.Add(new KeyValuePair<string,string>("screen_name", screenName));
             }
-            var doc = provider.RequestAPI(partialUri, method, para);
+            var doc = provider.RequestAPIv1(partialUri, method, para);
             if (doc == null)
                 return null;
             return TwitterUser.CreateByNode(doc.Element("user"));
@@ -338,7 +359,7 @@ namespace Std.Tweak
         {
             prevCursor = 0;
             nextCursor = 0;
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, para);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
             if (doc == null)
                 return null;
             List<TwitterUser> users = new List<TwitterUser>();
@@ -573,7 +594,7 @@ namespace Std.Tweak
             prevCursor = -1;
             nextCursor = -1;
 
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, para);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
             if (doc == null)
                 return null;
 
@@ -631,7 +652,7 @@ namespace Std.Tweak
             prevCursor = -1;
             nextCursor = -1;
 
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, para);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
             if (doc == null)
                 return null;
 
@@ -666,7 +687,7 @@ namespace Std.Tweak
             prevCursor = 0;
             nextCursor = 0;
 
-            var doc = provider.RequestAPI(partialUri, CredentialProvider.RequestMethod.GET, para);
+            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
             if (doc == null)
                 return null;
             var ll = doc.Element ("lists_list");
@@ -828,7 +849,7 @@ namespace Std.Tweak
         /// <param name="listId">list is</param>
         public static TwitterList GetList(this CredentialProvider provider, string userId, string listId)
         {
-            var list = provider.RequestAPI(userId + "/lists/" + listId + ".xml",
+            var list = provider.RequestAPIv1(userId + "/lists/" + listId + ".xml",
                  CredentialProvider.RequestMethod.GET, null).Element("list");
             if (list != null)
                 return TwitterList.CreateByNode(list);
@@ -850,7 +871,7 @@ namespace Std.Tweak
                 kvp.Add(new KeyValuePair<string, string>("description", Tweak.CredentialProviders.OAuth.UrlEncode(description, Encoding.UTF8, true)));
             if (inPrivate != null)
                 kvp.Add(new KeyValuePair<string, string>("mode", inPrivate.Value ? "private" : "public"));
-            var list = provider.RequestAPI(
+            var list = provider.RequestAPIv1(
                 "user/lists.xml",
                  CredentialProvider.RequestMethod.POST,
                  kvp).Element("list");
@@ -894,7 +915,7 @@ namespace Std.Tweak
         public static TwitterList DeleteList(this CredentialProvider provider, string userId, string listId)
         {
             var kvp = new[] { new KeyValuePair<string, string>("_method", "DELETE") };
-            var list = provider.RequestAPI(
+            var list = provider.RequestAPIv1(
                  userId + "/lists/" + listId + ".xml",
                   CredentialProvider.RequestMethod.POST,
                   kvp).Element("list");
@@ -914,7 +935,7 @@ namespace Std.Tweak
         public static TwitterList AddUserIntoList(this CredentialProvider provider, string yourScreenName, string listId, string addUser)
         {
             var kvp = new[] { new KeyValuePair<string, string>("id", addUser) };
-            var list = provider.RequestAPI(
+            var list = provider.RequestAPIv1(
                 yourScreenName + "/" + listId + ".xml",
                 CredentialProvider.RequestMethod.POST,
                 kvp).Element("list");
@@ -934,7 +955,7 @@ namespace Std.Tweak
         public static TwitterList DeleteUserFromList(this CredentialProvider provider, string yourScreenName, string listId, string deleteUserId)
         {
             var kvp = new[] { new KeyValuePair<string, string>("id", deleteUserId), new KeyValuePair<string, string>("_method", "DELETE") };
-            var list = provider.RequestAPI(
+            var list = provider.RequestAPIv1(
                 yourScreenName + "/" + listId + ".xml",
                 CredentialProvider.RequestMethod.POST,
                 kvp).Element("list");
@@ -954,7 +975,7 @@ namespace Std.Tweak
         /// <param name="queryUserId">query user id</param>
         public static TwitterUser GetListMember(this CredentialProvider provider, string user, string listId, string queryUserId)
         {
-            var query = provider.RequestAPI(
+            var query = provider.RequestAPIv1(
                 user + "/" + listId + "/members/" + queryUserId + ".xml",
                 CredentialProvider.RequestMethod.GET, null).Element("user");
             if (user != null)
@@ -971,7 +992,7 @@ namespace Std.Tweak
         /// <param name="listId">list id</param>
         public static bool SubscribeList(this CredentialProvider provider, string screenName, string listId)
         {
-            var users = provider.RequestAPI(
+            var users = provider.RequestAPIv1(
                 screenName + "/" + listId + "/subscribers.xml",
                 CredentialProvider.RequestMethod.POST, null).Element("users");
             if (users == null)
@@ -989,7 +1010,7 @@ namespace Std.Tweak
         public static bool UnsubscribeList(this CredentialProvider provider, string screenName, string listId)
         {
             var kvp = new[] { new KeyValuePair<string, string>("_method", "DELETE") };
-            var users = provider.RequestAPI(
+            var users = provider.RequestAPIv1(
                 screenName + "/" + listId + "/subscribers.xml",
                 CredentialProvider.RequestMethod.POST, kvp).Element("users");
             if (users == null)
@@ -1008,7 +1029,7 @@ namespace Std.Tweak
         /// <param name="queryUserId">query user id</param>
         public static TwitterUser GetListSubscriber(this CredentialProvider provider, string screenName, string listId, string queryUserId)
         {
-            var query = provider.RequestAPI(
+            var query = provider.RequestAPIv1(
                 screenName + "/" + listId + "/subscribers/" + queryUserId + ".xml",
                 CredentialProvider.RequestMethod.GET, null).Element("user");
             if (query != null)

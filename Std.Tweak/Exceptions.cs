@@ -6,10 +6,35 @@ using System.Xml.Linq;
 
 namespace Std.Tweak.Exceptions
 {
+    [Serializable]
+    public class TwitterException : System.Net.WebException
+    {
+        /// <summary>
+        /// Twitter common exception
+        /// </summary>
+        public TwitterException() { }
+
+        /// <summary>
+        /// Twitter common exception
+        /// </summary>
+        public TwitterException(string message) : base(message) { }
+
+        /// <summary>
+        /// Twitter common exception
+        /// </summary>
+        public TwitterException(string message, Exception inner) : base(message, inner) { }
+
+        protected TwitterException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
+    }
+
     /// <summary>
     /// Twitter xml analyze error
     /// </summary>
-    public class TwitterXmlParseException : System.Net.WebException
+    [Serializable]
+    public class TwitterXmlParseException : TwitterException
     {
         /// <summary>
         /// XML Parse error
@@ -28,12 +53,18 @@ namespace Std.Tweak.Exceptions
         /// </summary>
         /// <param name="xobj">bad xml object</param>
         public TwitterXmlParseException(XObject xobj) : base("Twitter xml analyzing error at:" + xobj == null || xobj.Document == null ? "(NULL object)" : xobj.Document.ToString()) { }
+
+        protected TwitterXmlParseException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
     }
 
     /// <summary>
     /// Twitter api request error
     /// </summary>
-    public class TwitterRequestException : System.Net.WebException
+    [Serializable]
+    public class TwitterRequestException : TwitterException
     {
         /// <summary>
         /// Twitter requesting error
@@ -52,17 +83,28 @@ namespace Std.Tweak.Exceptions
         /// </summary>
         /// <param name="xobj">bad xml object</param>
         public TwitterRequestException(XObject xobj) : base("Twitter api request error (XML Error at:" + xobj == null || xobj.Document == null ? "(NULL object)" : xobj.Document.ToString() + ")") { }
+
+        protected TwitterRequestException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
     }
 
     /// <summary>
     /// Twitter oauth authentication error
     /// </summary>
-    public class TwitterOAuthRequestException : System.Net.WebException
+    [Serializable]
+    public class TwitterOAuthRequestException : TwitterException
     {
         /// <summary>
         /// OAuth request exception
         /// </summary>
         /// <param name="detail">description</param>
         public TwitterOAuthRequestException(string detail) : base("Twitter OAuth request error:" + detail) { }
+
+        protected TwitterOAuthRequestException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
     }
 }

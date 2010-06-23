@@ -46,28 +46,25 @@ namespace Std.Tweak.CredentialProviders
         /// </summary>
         public string Password { get; set; }
 
-        /// <summary>
-        /// Twitter api uri
-        /// </summary>
-        protected virtual string TwitterUri { get { return "http://api.twitter.com/1/"; } }
+        private enum DocumentTypes { Invalid, Xml, Json };
 
         /// <summary>
         /// Request API
         /// </summary>
-        public sealed override System.Xml.Linq.XDocument RequestAPI(string uriPartial, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        public sealed override System.Xml.Linq.XDocument RequestAPI(string uri, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
         {
-            if (String.IsNullOrEmpty(uriPartial))
-                throw new ArgumentNullException(uriPartial);
-            else if (uriPartial.Length < 5)
+            if (String.IsNullOrEmpty(uri))
+                throw new ArgumentNullException(uri);
+            else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
-            string target = TwitterUri + (uriPartial.EndsWith("/") ? uriPartial.Substring(1) : uriPartial);
+            var target = uri;
 
-            bool JsonMode = false;
+            DocumentTypes docType = DocumentTypes.Invalid;
 
             if (target.EndsWith("xml"))
-                JsonMode = false;
+                docType = DocumentTypes.Xml;
             else if (target.EndsWith("json"))
-                JsonMode = true;
+                docType = DocumentTypes.Json;
             else
                 throw new ArgumentException("format can't identify. uriPartial is must ends with xml or json.");
 
@@ -96,30 +93,64 @@ namespace Std.Tweak.CredentialProviders
                             this.RateLimitReset = UnixEpoch.GetDateTimeByUnixEpoch(rateLimitReset);
                         }
 
-                        XDocument xd = null;
-                        try
+                        switch (docType)
                         {
-                            using (var s = res.GetResponseStream())
-                            {
-                                if (JsonMode)
-                                {
-                                    using (var jr = JsonReaderWriterFactory.CreateJsonReader(s, XmlDictionaryReaderQuotas.Max))
-                                        xd = XDocument.Load(jr);
-                                }
-                                else
-                                {
-                                    using (var sr = new StreamReader(s))
-                                        xd = XDocument.Load(sr);
-                                }
-                            }
+                            case DocumentTypes.Xml:
+                                return XDocumentGenerator(res);
+                            case DocumentTypes.Json:
+                                return XDocumentGenerator(res, (s) => JsonReaderWriterFactory.CreateJsonReader(s, XmlDictionaryReaderQuotas.Max));
+                            default:
+                                throw new NotSupportedException("Invalid format.");
                         }
-                        catch (XmlException)
-                        {
-                            throw;
-                        }
-                        return xd;
                     }));
                 if (ret.Succeeded && ret.Data != null)
+                {
+                    return ret.Data;
+                }
+                else
+                {
+                    if (ret.Exception != null)
+                        throw ret.Exception;
+                    else
+                        throw new WebException(ret.Message);
+                }
+            }
+            catch (WebException we)
+            {
+                System.Diagnostics.Debug.WriteLine(we.ToString());
+            }
+            catch (XmlException xe)
+            {
+                throw new Exceptions.TwitterXmlParseException(xe);
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Request API
+        /// </summary>
+        public override Stream RequestStreamingAPI(string uri, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        {
+            if (String.IsNullOrEmpty(uri))
+                throw new ArgumentNullException(uri);
+            else if (uri.Length < 5)
+                throw new ArgumentException("uri is too short.");
+            var target = uri;
+
+            try
+            {
+                var req = Http.CreateRequest(new Uri(target), true);
+                req.Credentials = new System.Net.NetworkCredential(UserName, Password);
+                var ret = Http.WebConnect<Stream>(
+                    req,
+                    method.ToString(), null,
+                    new Http.DStreamCallbackFull<Stream>((res) => res.GetResponseStream()));
+               if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;
                 }
