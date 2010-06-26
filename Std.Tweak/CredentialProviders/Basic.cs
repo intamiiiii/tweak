@@ -146,16 +146,18 @@ namespace Std.Tweak.CredentialProviders
             {
                 var req = Http.CreateRequest(new Uri(target), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
-                var ret = Http.WebConnect<Stream>(
+                var ret = Http.WebConnectStreaming(
                     req,
-                    method.ToString(), null,
-                    new Http.DStreamCallbackFull<Stream>((res) => res.GetResponseStream()));
+                    method.ToString());
+                System.Diagnostics.Debug.WriteLine("Connected");
                if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;
                 }
                 else
                 {
+                    if (ret.Data != null)
+                        ret.Data.Close();
                     if (ret.Exception != null)
                         throw ret.Exception;
                     else

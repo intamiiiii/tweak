@@ -92,6 +92,16 @@
     </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Std.Network\Std.Network.csproj">
+      <Project>{BC064822-04D8-4C44-9A4C-334AC7D3C046}</Project>
+      <Name>Std.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Std.Tweak\Std.Tweak.csproj">
+      <Project>{1FAD2DE7-2E4E-4853-B2CB-D8383FCA738D}</Project>
+      <Name>Std.Tweak</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -195,6 +195,45 @@ namespace Std.Network
         }
 
         /// <summary>
+        /// Web connection and return response stream
+        /// </summary>
+        /// <param name="req">request</param>
+        /// <param name="method">method</param>
+        /// <param name="credential">credential</param>
+        /// <param name="senddata">sending byte data</param>
+        /// <returns>stream</returns>
+        public static OperationResult<Stream> WebConnectStreaming
+            (HttpWebRequest req,
+            string method = "GET",
+            ICredentials credential = null,
+            byte[] senddata = null)
+        {
+            try
+            {
+                //Set method
+                req.Method = method;
+
+                //Set credential
+                if (credential != null)
+                    req.Credentials = credential;
+
+                if (senddata != null && senddata.Length != 0)
+                {
+                    //Set sending-length
+                    req.ContentLength = senddata.Length;
+
+                    using (Stream s = req.GetRequestStream())
+                        s.Write(senddata, 0, senddata.Length);
+                }
+                return TreatWebResponse<Stream>((HttpWebResponse)req.GetResponse(), null, sf => sf.GetResponseStream());
+            }
+            catch (Exception e)
+            {
+                return new OperationResult<Stream>(req.RequestUri, e);
+            }
+        }
+
+        /// <summary>
         /// Request to web forms, and read responce with string.
         /// </summary>
         /// <param name="req">request</param>

@@ -60,7 +60,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get timeline with full parameters
         /// </summary>
-        public static IEnumerable<TwitterStatus> GetTimeline(this CredentialProvider provider, string partialUri, long? sinceId, long? maxId, long? count, long? page, string userId, string screenName)
+        private static IEnumerable<TwitterStatus> GetTimeline(this CredentialProvider provider, string partialUri, long? sinceId, long? maxId, long? count, long? page, string userId, string screenName)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (sinceId != null && sinceId.HasValue)
@@ -106,7 +106,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get home timeline with full params (it contains following users' tweets)
         /// </summary>
-        public static IEnumerable<TwitterStatus> GetHomeTimeline(this CredentialProvider provider, long? sinceId, long? maxId, long? count, long? page)
+        public static IEnumerable<TwitterStatus> GetHomeTimeline(this CredentialProvider provider, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
         {
             return provider.GetTimeline("statuses/home_timeline.xml", sinceId, maxId, count, page, null, null);
         }
@@ -123,7 +123,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get mentions with full params
         /// </summary>
-        public static IEnumerable<TwitterStatus> GetMentions(this CredentialProvider provider, long? sinceId, long? maxId, long? count, long? page)
+        public static IEnumerable<TwitterStatus> GetMentions(this CredentialProvider provider, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
         {
             return provider.GetTimeline("statuses/mentions.xml", sinceId, maxId, count, page, null, null);
         }
@@ -163,7 +163,7 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         /// <param name="body">body</param>
         /// <param name="inReplyToStatusId">tweet id which be replied this tweet</param>
-        public static TwitterStatus UpdateStatus(this CredentialProvider provider, string body, long? inReplyToStatusId)
+        public static TwitterStatus UpdateStatus(this CredentialProvider provider, string body, long? inReplyToStatusId = null)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             para.Add(new KeyValuePair<string, string>("status", Tweak.CredentialProviders.OAuth.UrlEncode(body, Encoding.UTF8, true)));
@@ -211,7 +211,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get direct messages with full params
         /// </summary>
-        private static IEnumerable<TwitterDirectMessage> GetDirectMessages(this CredentialProvider provider, string partialUri, long? sinceId, long? maxId, long? count, long? page)
+        private static IEnumerable<TwitterDirectMessage> GetDirectMessages(this CredentialProvider provider, string partialUri = null, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (sinceId != null && sinceId.HasValue)
@@ -246,7 +246,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get direct messages with full params
         /// </summary>
-        public static IEnumerable<TwitterDirectMessage> GetDirectMessages(this CredentialProvider provider, long? sinceId, long? maxId, long? count, long? page)
+        public static IEnumerable<TwitterDirectMessage> GetDirectMessages(this CredentialProvider provider, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
         {
             return provider.GetDirectMessages("direct_messages.xml", sinceId, maxId, count, page);
         }
@@ -263,7 +263,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get direct messages you sent with full params
         /// </summary>
-        public static IEnumerable<TwitterDirectMessage> GetSentDirectMessages(this CredentialProvider provider, long? sinceId, long? maxId, long? count, long? page)
+        public static IEnumerable<TwitterDirectMessage> GetSentDirectMessages(this CredentialProvider provider, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
         {
             return provider.GetDirectMessages("direct_messages/sent.xml", sinceId, maxId, count, page);
         }
@@ -438,7 +438,6 @@ namespace Std.Tweak
             return provider.GetUsersAll("statuses/friends.xml", null, screenName);
         }
 
-
         /// <summary>
         /// Get friends with full params
         /// </summary>
@@ -448,7 +447,6 @@ namespace Std.Tweak
                 cursor = -1;
             return provider.GetUsers("statuses/friends.xml", userId, screenName, cursor, out prevCursor, out nextCursor);
         }
-
 
         /// <summary>
         /// Get followers all
@@ -473,9 +471,9 @@ namespace Std.Tweak
         /// <summary>
         /// Get followers with full params
         /// </summary>
-        public static IEnumerable<TwitterUser> GetFollowers(this CredentialProvider provider, string userId, string screenName, long? page, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterUser> GetFollowers(this CredentialProvider provider, string userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
         {
-            return provider.GetUsers("statuses/followers.xml", userId, screenName, page, out prevCursor, out nextCursor);
+            return provider.GetUsers("statuses/followers.xml", userId, screenName, cursor, out prevCursor, out nextCursor);
         }
 
         #endregion
@@ -535,7 +533,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get list statuses with full params
         /// </summary>
-        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userId, string listId, string sinceId, string maxId, long? perPage, long? page)
+        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userId, string listId, string sinceId = null, string maxId = null, long? perPage = null, long? page = null)
         {
             listId = listId.Replace("_", "-");
             var partialUri = userId + "/lists/" + listId + "/statuses.xml";
@@ -565,15 +563,8 @@ namespace Std.Tweak
         /// <param name="listId">list id</param>
         public static IEnumerable<TwitterUser> GetListMembersAll(this CredentialProvider provider, string userId, string listId)
         {
-            long n_cursor = -1;
-            long c_cursor = -1;
-            long p;
-            while (n_cursor != 0)
-            {
-                foreach (var m in provider.GetListMembers(userId, listId, c_cursor, out p, out n_cursor))
-                    yield return m;
-                c_cursor = n_cursor;
-            }
+            listId = listId.Replace("_", "-");
+            return provider.GetUsersAll(userId + "/" + listId + "/members.xml", null, null);
         }
 
         /// <summary>
@@ -581,38 +572,21 @@ namespace Std.Tweak
         /// </summary>
         public static IEnumerable<TwitterUser> GetListMembers(this CredentialProvider provider, string userId, string listId, long? cursor, out long prevCursor, out long nextCursor)
         {
+            if (cursor == null)
+                cursor = -1;
             listId = listId.Replace("_", "-");
+            return provider.GetUsers(userId + "/" + listId + "/members.xml", null, null, cursor, out prevCursor, out nextCursor);
+        }
 
-            var partialUri = userId + "/" + listId + "/members.xml";
-
-            List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
-            if (cursor != null)
-            {
-                para.Add(new KeyValuePair<string, string>("cursor", cursor.ToString()));
-            }
-
-            prevCursor = -1;
-            nextCursor = -1;
-
-            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
-            if (doc == null)
-                return null;
-
-            var ul = doc.Element("users_list");
-            if (ul != null)
-            {
-                var nc = ul.Element("next_cursor");
-                if (nc != null)
-                    nextCursor = (long)nc.ParseLong();
-                var pc = ul.Element("previous_cursor");
-                if (pc != null)
-                    prevCursor = (long)pc.ParseLong();
-            }
-            List<TwitterUser> users = new List<TwitterUser>();
-            return from n in doc.Descendants("user")
-                   let u = TwitterUser.CreateByNode(n)
-                   where u != null
-                   select u;
+        /// <summary>
+        /// Get list subscribers with full params
+        /// </summary>
+        public static IEnumerable<TwitterUser> GetListSubscribers(this CredentialProvider provider, string userId, string listId, long? cursor, out long prevCursor, out long nextCursor)
+        {
+            if (cursor == null)
+                cursor = -1;
+            listId = listId.Replace("_", "-");
+            return provider.GetUsers(userId + "/" + listId + "/subscribers.xml", null, null, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
@@ -623,60 +597,14 @@ namespace Std.Tweak
         /// <param name="listId">list id</param>
         public static IEnumerable<TwitterUser> GetListSubscribersAll(this CredentialProvider provider, string userId, string listId)
         {
-            long n_cursor = -1;
-            long c_cursor = -1;
-            long p;
-            while (n_cursor != 0)
-            {
-                foreach (var m in provider.GetListSubscribers(userId, listId, c_cursor, out p, out n_cursor))
-                    yield return m;
-                c_cursor = n_cursor;
-            }
-        }
-
-        /// <summary>
-        /// Get list subscribers with full params
-        /// </summary>
-        public static IEnumerable<TwitterUser> GetListSubscribers(this CredentialProvider provider, string userId, string listId, long? cursor, out long prevCursor, out long nextCursor)
-        {
             listId = listId.Replace("_", "-");
-
-            var partialUri = userId + "/" + listId + "/subscribers.xml";
-
-            List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
-            if (cursor != null)
-            {
-                para.Add(new KeyValuePair<string, string>("cursor", cursor.ToString()));
-            }
-
-            prevCursor = -1;
-            nextCursor = -1;
-
-            var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
-            if (doc == null)
-                return null;
-
-            var ul = doc.Element("users_list");
-            if (ul != null)
-            {
-                var nc = ul.Element("next_cursor");
-                if (nc != null)
-                    nextCursor = (long)nc.ParseLong();
-                var pc = ul.Element("previous_cursor");
-                if (pc != null)
-                    prevCursor = (long)pc.ParseLong();
-            }
-            List<TwitterUser> users = new List<TwitterUser>();
-            return from n in doc.Descendants("user")
-                   let u = TwitterUser.CreateByNode(n)
-                   where u != null
-                   select u;
+            return provider.GetUsersAll(userId + "/" + listId + "/subscribers.xml", null, null);
         }
 
         /// <summary>
         /// Get list with full params
         /// </summary>
-        private static IEnumerable<TwitterList> GetListData(this CredentialProvider provider, string partialUri, long? cursor, out long prevCursor, out long nextCursor)
+        private static IEnumerable<TwitterList> GetLists(this CredentialProvider provider, string partialUri, long? cursor, out long prevCursor, out long nextCursor)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (cursor != null)
@@ -709,16 +637,43 @@ namespace Std.Tweak
         }
 
         /// <summary>
+        /// Get list enumerations all
+        /// </summary>
+        private static IEnumerable<TwitterList> GetListsAll(this CredentialProvider provider, string partialUri)
+        {
+            long n_cursor = -1;
+            long c_cursor = -1;
+            long p;
+            while (n_cursor != 0)
+            {
+                var lists = provider.GetLists(partialUri, c_cursor, out p, out n_cursor);
+                if (lists != null)
+                    foreach (var u in lists)
+                        yield return u;
+                c_cursor = n_cursor;
+            }
+        }
+
+        /// <summary>
         /// Get lists you following
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
         public static IEnumerable<TwitterList> GetFollowingListsAll(this CredentialProvider provider, string userId)
         {
-            foreach (var l in provider.GetListsAll(userId))
+            foreach (var l in provider.GetUserListsAll(userId))
                 yield return l;
             foreach (var l in provider.GetSubscribedListsAll(userId))
                 yield return l;
+        }
+
+        /// <summary>
+        /// Get lists someone created with full params
+        /// </summary>
+        public static IEnumerable<TwitterList> GetUserLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        {
+            var partialUri = userId + "/lists.xml";
+            return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
@@ -726,39 +681,19 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetListsAll(this CredentialProvider provider, string userId)
-        {
-            long n_cursor = -1;
-            long c_cursor = -1;
-            long p;
-            while (n_cursor != 0)
-            {
-                var lists = provider.GetLists(userId, c_cursor, out p, out n_cursor);
-                if (lists != null)
-                    foreach (var l in lists)
-                        yield return l;
-                c_cursor = n_cursor;
-            }
-        }
-
-        /// <summary>
-        /// Get lists someone created 
-        /// </summary>
-        /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetLists(this CredentialProvider provider, string userId)
-        {
-            long n, p;
-            return provider.GetLists(userId, -1, out p, out n);
-        }
-
-        /// <summary>
-        /// Get lists someone created with full params
-        /// </summary>
-        public static IEnumerable<TwitterList> GetLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterList> GetUserListsAll(this CredentialProvider provider, string userId)
         {
             var partialUri = userId + "/lists.xml";
-            return provider.GetListData(partialUri, cursor, out prevCursor, out nextCursor);
+            return provider.GetListsAll(partialUri);
+        }
+
+        /// <summary>
+        /// Get lists which member contains someone with full params
+        /// </summary>
+        public static IEnumerable<TwitterList> GetMembershipLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        {
+            var partialUri = userId + "/lists/memberships.xml";
+            return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
@@ -768,37 +703,17 @@ namespace Std.Tweak
         /// <param name="userId">target user id</param>
         public static IEnumerable<TwitterList> GetMembershipListsAll(this CredentialProvider provider, string userId)
         {
-            long n_cursor = -1;
-            long c_cursor = -1;
-            long p;
-            while (n_cursor != 0)
-            {
-                var lists = provider.GetMembershipLists(userId, c_cursor, out p, out n_cursor);
-                if (lists != null)
-                    foreach (var l in lists)
-                        yield return l;
-                c_cursor = n_cursor;
-            }
-        }
-
-        /// <summary>
-        /// Get lists which member contains someone
-        /// </summary>
-        /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetMembershipLists(this CredentialProvider provider, string userId)
-        {
-            long n, p;
-            return provider.GetMembershipLists(userId, null, out p, out n);
-        }
-
-        /// <summary>
-        /// Get lists which member contains someone with full params
-        /// </summary>
-        public static IEnumerable<TwitterList> GetMembershipLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
-        {
             var partialUri = userId + "/lists/memberships.xml";
-            return provider.GetListData(partialUri, cursor, out prevCursor, out nextCursor);
+            return provider.GetListsAll(partialUri);
+        }
+
+        /// <summary>
+        /// Get lists someone subscribed with full params
+        /// </summary>
+        public static IEnumerable<TwitterList> GetSubscribedLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        {
+            var partialUri = userId + "/lists/subscriptions.xml";
+            return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
@@ -808,37 +723,8 @@ namespace Std.Tweak
         /// <param name="userId">target user id</param>
         public static IEnumerable<TwitterList> GetSubscribedListsAll(this CredentialProvider provider, string userId)
         {
-            long n_cursor = -1;
-            long c_cursor = -1;
-            long p;
-            while (n_cursor != 0)
-            {
-                var lists = provider.GetSubscribedLists(userId, c_cursor, out p, out n_cursor);
-                if (lists != null)
-                    foreach (var l in lists)
-                        yield return l;
-                c_cursor = n_cursor;
-            }
-        }
-
-        /// <summary>
-        /// Get lists someone subscribed
-        /// </summary>
-        /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetSubscribedLists(this CredentialProvider provider, string userId)
-        {
-            long n, p;
-            return provider.GetSubscribedLists(userId, null, out p, out n);
-        }
-
-        /// <summary>
-        /// Get lists someone subscribed with full params
-        /// </summary>
-        public static IEnumerable<TwitterList> GetSubscribedLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
-        {
             var partialUri = userId + "/lists/subscriptions.xml";
-            return provider.GetListData(partialUri, cursor, out prevCursor, out nextCursor);
+            return provider.GetListsAll(partialUri);
         }
 
         /// <summary>

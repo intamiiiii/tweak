@@ -174,16 +174,17 @@ namespace Std.Tweak.CredentialProviders
             var authuri = CreateUrl(target, method, param);
             try
             {
-                var ret = Http.WebConnect<Stream>(
+                var ret = Http.WebConnectStreaming(
                     Http.CreateRequest(new Uri(authuri), true),
-                    method.ToString(), null,
-                    new Http.DStreamCallbackFull<Stream>((res) => res.GetResponseStream()));
+                    method.ToString());
                 if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;
                 }
                 else
                 {
+                    if (ret.Data != null)
+                        ret.Data.Close();
                     if (ret.Exception != null)
                         throw ret.Exception;
                     else

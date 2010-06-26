@@ -17,7 +17,7 @@ namespace Std.Tweak.Streaming
         static Thread streamThread = null;
         static Thread queueTreatingThread = null;
 
-        static Queue<string> recvQueue;
+        static Queue<string> recvQueue = new Queue<string>();
         public static event Action<TwitterStatus> OnReceivedStatus;
                
 
@@ -37,8 +37,11 @@ namespace Std.Tweak.Streaming
                 args.Add(new KeyValuePair<string,string>("follow", follow));
             if(track != null)
                 args.Add(new KeyValuePair<string,string>("track", track));
-            provider.RequestStreamingAPI(GetStreamingUri(type), CredentialProvider.RequestMethod.GET, args);
-
+            queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
+            queueTreatingThread.Start();
+            streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));
+            var strm = provider.RequestStreamingAPI(GetStreamingUri(type), CredentialProvider.RequestMethod.GET, args);
+            streamThread.Start(strm);
         }
 
         /// <summary>
@@ -46,6 +49,8 @@ namespace Std.Tweak.Streaming
         /// </summary>
         public static void EndStreaming()
         {
+            streamThread.Abort();
+            queueTreatingThread.Abort();
         }
 
         private static void StreamingThread(object streamarg)
@@ -53,22 +58,38 @@ namespace Std.Tweak.Streaming
             var str = streamarg as Stream;
             if(str == null)
                 return;
+            try
+            {
+                using (var sr = new StreamReader(str))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        recvQueue.Enqueue(sr.ReadLine());
+                        queueTracker.Set();
+                    }
+                }
+            }
+            finally
+            {
+                str.Close();
+            }
         }
 
+        static ManualResetEvent queueTracker = new ManualResetEvent(true);
         private static void QueueDequeueThread()
         {
             while (true)
             {
+                queueTracker.Reset();
                 if (recvQueue.Count > 0)
                 {
                     var str = recvQueue.Dequeue();
-
+                    System.Diagnostics.Debug.WriteLine(str);
                 }
                 else
                 {
-                    Thread.Sleep(100);
+                    queueTracker.WaitOne();
                 }
-                Thread.Sleep(0);
             }
         }
 
