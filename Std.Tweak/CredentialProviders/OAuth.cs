@@ -192,11 +192,7 @@ namespace Std.Tweak.CredentialProviders
             }
             catch (WebException we)
             {
-                System.Diagnostics.Debug.WriteLine(we.ToString());
-            }
-            catch (XmlException xe)
-            {
-                throw new Exceptions.TwitterXmlParseException(xe);
+                throw new Exceptions.TwitterException("Exception thrown.", we);
             }
             catch (IOException)
             {

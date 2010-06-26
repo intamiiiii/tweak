@@ -47,7 +47,7 @@ namespace Std.Tweak
         /// <summary>
         /// Request API
         /// </summary>
-        /// <param name="uriPartial">target uri(partial)</param>
+        /// <param name="uriPrartial">target uri(partial)</param>
         /// <param name="method">target method</param>
         /// <param name="param">parameters</param>
         /// <returns>XML document</returns>
@@ -116,6 +116,5 @@ namespace Std.Tweak
             }
             return xDoc;
         }
-
     }
 }
