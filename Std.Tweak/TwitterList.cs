@@ -89,7 +89,10 @@ namespace Std.Tweak
         /// </summary>
         public TwitterList() { }
 
-        private TwitterList(XElement node)
+        /// <summary>
+        /// Create list information from xml node
+        /// </summary>
+        protected TwitterList(XElement node)
         {
             this.Id = node.Element("id").ParseLong();
 

@@ -21,7 +21,10 @@ namespace Std.Tweak
             return new TwitterDirectMessage(dmNode);
         }
 
-        private TwitterDirectMessage(XElement node)
+        /// <summary>
+        /// Create direct message from xml node
+        /// </summary>
+        protected TwitterDirectMessage(XElement node)
             : base()
         {
             System.Diagnostics.Debug.WriteLine(node.ToString());

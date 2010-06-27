@@ -6,6 +6,9 @@ using System.Xml.Linq;
 
 namespace Std.Tweak.Exceptions
 {
+    /// <summary>
+    /// Twitter common error
+    /// </summary>
     [Serializable]
     public class TwitterException : System.Net.WebException
     {
@@ -24,6 +27,9 @@ namespace Std.Tweak.Exceptions
         /// </summary>
         public TwitterException(string message, Exception inner) : base(message, inner) { }
 
+        /// <summary>
+        /// for serialization support
+        /// </summary>
         protected TwitterException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)
@@ -54,6 +60,9 @@ namespace Std.Tweak.Exceptions
         /// <param name="xobj">bad xml object</param>
         public TwitterXmlParseException(XObject xobj) : base("Twitter xml analyzing error at:" + xobj == null || xobj.Document == null ? "(NULL object)" : xobj.Document.ToString()) { }
 
+        /// <summary>
+        /// for serialization support
+        /// </summary>
         protected TwitterXmlParseException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)
@@ -84,6 +93,9 @@ namespace Std.Tweak.Exceptions
         /// <param name="xobj">bad xml object</param>
         public TwitterRequestException(XObject xobj) : base("Twitter api request error (XML Error at:" + xobj == null || xobj.Document == null ? "(NULL object)" : xobj.Document.ToString() + ")") { }
 
+        /// <summary>
+        /// for serialization support
+        /// </summary>
         protected TwitterRequestException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)
@@ -102,6 +114,9 @@ namespace Std.Tweak.Exceptions
         /// <param name="detail">description</param>
         public TwitterOAuthRequestException(string detail) : base("Twitter OAuth request error:" + detail) { }
 
+        /// <summary>
+        /// for serialization support
+        /// </summary>
         protected TwitterOAuthRequestException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)

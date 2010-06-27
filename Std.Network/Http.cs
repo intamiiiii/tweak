@@ -16,17 +16,32 @@ namespace Std.Network
         /// </summary>
         private static Dictionary<Uri, DateTime> modifieds = new Dictionary<Uri, DateTime>();
 
+        /// <summary>
+        /// Clear internal modifieds cache
+        /// </summary>
         public static void ClearModifiedsCache()
         {
             modifieds.Clear();
         }
 
+        /// <summary>
+        /// User agent
+        /// </summary>
         public static string UserAgent = "Std/HttpLib 1.0(.NET Framework 3.5)";
 
+        /// <summary>
+        /// Timeout
+        /// </summary>
         public static int TimeoutInterval = 5000;
 
+        /// <summary>
+        /// Use expect100continue option as default
+        /// </summary>
         public static bool UseExpect100ContinueAsDefault = false;
 
+        /// <summary>
+        /// Default proxy info
+        /// </summary>
         public static IWebProxy DefaultProxy = WebRequest.DefaultWebProxy;
 
         /// <summary>
@@ -77,20 +92,14 @@ namespace Std.Network
         }
 
         /// <summary>
-        /// Connect network with default HTTPWebRequest
+        /// Stream callback delegate
         /// </summary>
-        /// <param name="uri">Target URI</param>
-        /// <param name="usemodifieds">Use If-Modified-Since Header</param>
-        /// <param name="method">Using method(ex:GET,POST,etc...)</param>
-        /// <summary>
-        /// Delegate for stream callback
-        /// </summary>
-        public delegate T DStreamCallback<T>(Stream strm);
+        public delegate T DStreamCallback<out T>(Stream strm);
 
         /// <summary>
         /// delegate for stream callback full-type
         /// </summary>
-        public delegate T DStreamCallbackFull<T>(WebResponse res);
+        public delegate T DStreamCallbackFull<out T>(WebResponse res);
 
         public static OperationResult<T> WebConnect<T>
             (HttpWebRequest req,
@@ -248,7 +257,7 @@ namespace Std.Network
         {
             return WebFormSendString<string>
                 (req,
-                CommonStreamReader.ReadStringByStream,
+                CommonStreamReader.ReadStringFromStream,
                 values,
                 encode);
         }
@@ -266,11 +275,11 @@ namespace Std.Network
         public static OperationResult<T> WebFormSendString<T>
             (HttpWebRequest req,
             DStreamCallback<T> callback,
-            Dictionary<string, string> values,
+            Dictionary<string, string> sends,
             Encoding encode)
         {
-            var paras = from k in values.Keys
-                        select k + "=" + values[k];
+            var paras = from k in sends
+                        select k.Key + "=" + k.Value;
 
             var dat = encode.GetBytes(String.Join("&", paras.ToArray()));
             req.Method = "POST"; //fixed
@@ -308,12 +317,11 @@ namespace Std.Network
         /// <param name="encode">Using encode</param>
         public static OperationResult<T> WebUpload<T>
             (HttpWebRequest req,
-            ICredentials credential,
             DStreamCallback<T> callback,
             SendData[] senddata,
             Encoding encode)
         {
-            return WebUpload<T>(req, credential, callback, null, senddata, encode);
+            return WebUpload<T>(req, callback, null, senddata, encode);
         }
 
         /// <summary>
@@ -326,12 +334,11 @@ namespace Std.Network
         /// <param name="encode">Using encode</param>
         public static OperationResult<T> WebUpload<T>
             (HttpWebRequest req,
-            ICredentials credential,
             DStreamCallbackFull<T> callback,
             SendData[] senddata,
             Encoding encode)
         {
-            return WebUpload<T>(req, credential, null, callback, senddata, encode);
+            return WebUpload<T>(req, null, callback, senddata, encode);
         }
 
         /// <summary>
@@ -339,7 +346,6 @@ namespace Std.Network
         /// </summary>
         private static OperationResult<T> WebUpload<T>
             (HttpWebRequest req,
-            ICredentials credential,
             DStreamCallback<T> callback,
             DStreamCallbackFull<T> callbackFull,
             SendData[] senddata,
@@ -354,10 +360,6 @@ namespace Std.Network
                 //Set method
                 req.Method = "POST";
                 req.ContentType = "multipart/form-data; boundary=" + boundary;
-
-                //Set credential
-                if (credential != null)
-                    req.Credentials = credential;
 
                 //Create post-data
                 //String-Filename alternative
@@ -487,10 +489,24 @@ namespace Std.Network
             }
         }
 
+        /// <summary>
+        /// Sending data structure
+        /// </summary>
         public struct SendData
         {
+            /// <summary>
+            /// Send key name
+            /// </summary>
             public string Name;
+
+            /// <summary>
+            /// Send value or file name
+            /// </summary>
             public string textorfilename;
+
+            /// <summary>
+            /// Value treat as binary file
+            /// </summary>
             public bool filemode;
 
             /// <summary>
@@ -509,7 +525,7 @@ namespace Std.Network
             /// Append some item
             /// </summary>
             /// <param name="n">Field name</param>
-            /// <param name="path">file-path/text</param>
+            /// <param name="pathort">file-path/text</param>
             /// <param name="file">set file-mode</param>
             public SendData(string n, string pathort, bool file)
                 : this(n, pathort)
@@ -546,11 +562,11 @@ namespace Std.Network
         }
 
         /// <summary>
-        /// 指定したURIへ接続し、結果をStringで返却します。
+        /// Connect specified uri and return string
         /// </summary>
-        /// <param name="uri">接続先URI</param>
-        /// <param name="authorize">設定のアカウントを使ってログインするか</param>
-        /// <param name="post">POSTメソッドを使うか</param>
+        /// <param name="uri">target uri</param>
+        /// <param name="credential">credential information</param>
+        /// <param name="method">using method</param>
         /// <returns></returns>
         public static OperationResult<string> WebConnectDownloadString(
             Uri uri,
@@ -561,7 +577,7 @@ namespace Std.Network
                 CreateRequest(uri, true),
                 method,
                 credential,
-                new DStreamCallback<string>(CommonStreamReader.ReadStringByStream), null);
+                new DStreamCallback<string>(CommonStreamReader.ReadStringFromStream), null);
         }
 
         /// <summary>
@@ -570,9 +586,9 @@ namespace Std.Network
         public class CommonStreamReader
         {
             /// <summary>
-            /// Get string by stream
+            /// Get string from stream
             /// </summary>
-            public static string ReadStringByStream(Stream strm)
+            public static string ReadStringFromStream(Stream strm)
             {
                 using (StreamReader sr = new StreamReader(strm))
                 {
@@ -580,7 +596,12 @@ namespace Std.Network
                 }
             }
 
-            public static Image ReadImageByStream(Stream strm)
+            /// <summary>
+            /// Get image from stream
+            /// </summary>
+            /// <param name="strm"></param>
+            /// <returns></returns>
+            public static Image ReadImageFromStream(Stream strm)
             {
                 return Image.FromStream(strm);
             }

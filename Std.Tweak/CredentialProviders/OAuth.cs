@@ -199,8 +199,6 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw;
             }
-
-            return null;
         }
 
         #region OAuth property
@@ -374,12 +372,12 @@ namespace Std.Tweak.CredentialProviders
 
         #region Negotiation method
 
-        private string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
         {
             return CreateUrl(uri, method, param, null);
         }
 
-        private string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin)
+        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin)
         {
             StringBuilder sb = new StringBuilder();
             param = AddOAuthParams(
@@ -430,7 +428,7 @@ namespace Std.Tweak.CredentialProviders
             return result.ToString();
         }
 
-        private Dictionary<string, string> SplitParamDict(string param)
+        protected Dictionary<string, string> SplitParamDict(string param)
         {
             var retdict = new Dictionary<string, string>();
             foreach (var p in SplitParam(param))
@@ -442,7 +440,7 @@ namespace Std.Tweak.CredentialProviders
             return retdict;
         }
 
-        private IEnumerable<KeyValuePair<string, string>> SplitParam(string paramstring)
+        protected IEnumerable<KeyValuePair<string, string>> SplitParam(string paramstring)
         {
             paramstring.TrimStart('?');
             if (String.IsNullOrEmpty(paramstring))
@@ -463,7 +461,7 @@ namespace Std.Tweak.CredentialProviders
             }
         }
 
-        private string JoinParam(IEnumerable<KeyValuePair<string, string>> param)
+        protected string JoinParam(IEnumerable<KeyValuePair<string, string>> param)
         {
             var jparam = from p in param
                          orderby p.Key

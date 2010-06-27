@@ -60,6 +60,7 @@
     <Compile Include="CredentialProvider.cs" />
     <Compile Include="CredentialProviders\Basic.cs" />
     <Compile Include="CredentialProviders\OAuth.cs" />
+    <Compile Include="CredentialProviders\xAuth.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Parsers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Streaming\StreamingApi.cs" />
     <Compile Include="TwitterDirectMessage.cs" />
     <Compile Include="TwitterList.cs" />
+    <Compile Include="TwitterRelation.cs" />
     <Compile Include="TwitterStatus.cs" />
     <Compile Include="TwitterStatusBase.cs" />
     <Compile Include="TwitterUser.cs" />

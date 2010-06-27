@@ -478,6 +478,141 @@ namespace Std.Tweak
 
         #endregion
 
+        #region Friendship methods
+
+        /// <summary>
+        /// Create friendship with someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser CreateFriendship(this CredentialProvider provider, string user)
+        {
+            var ret = provider.RequestAPIv1("friendships/create/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
+            if(ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Create friendship with someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">target user id</param>
+        /// <param name="screenName">target user screen name</param>
+        /// <param name="follow">send his tweet to specified device</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser CreateFriendship(this CredentialProvider provider, string userId = null, string screenName = null, bool follow = false)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty( screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            if (follow)
+                arg.Add(new KeyValuePair<string, string>("follow", "true"));
+            var ret = provider.RequestAPIv1("friendships/create.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Destroy friendship with someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser DestroyFriendship(this CredentialProvider provider, string user)
+        {
+            var ret = provider.RequestAPIv1("friendships/destroy/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Destroy friendship with someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">target user id</param>
+        /// <param name="screenName">target user screen name</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser CreateFriendship(this CredentialProvider provider, string userId = null, string screenName = null)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            var ret = provider.RequestAPIv1("friendships/destroy.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Check exists friendship
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userA">user A</param>
+        /// <param name="userB">user B</param>
+        /// <returns>if user A or B is not existed, this method returns false.</returns>
+        public static bool ExistsFriendship(this CredentialProvider provider, string userA, string userB)
+        {
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            arg.Add(new KeyValuePair<string, string>("user_a", userA));
+            arg.Add(new KeyValuePair<string, string>("user_b", userB));
+            var ret = provider.RequestAPIv1("friendship/exists.xml", CredentialProvider.RequestMethod.GET, arg);
+            if (ret.Element("friends") != null)
+                return ret.Element("friends").ParseBool();
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Check friendship with someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="sourceId">source id</param>
+        /// <param name="sourceScreenName">source screen name</param>
+        /// <param name="targetId">target id</param>
+        /// <param name="targetScreenName">target screen name</param>
+        /// <remarks>
+        /// Target id or target screen name must set.
+        /// </remarks>
+        public static TwitterRelation ShowFriendship(this CredentialProvider provider, string sourceId = null, string sourceScreenName = null, string targetId = null, string targetScreenName = null)
+        {
+            if (String.IsNullOrEmpty(targetId) && String.IsNullOrEmpty(targetScreenName))
+                throw new ArgumentException("Target id or target screen name must set.");
+            List<KeyValuePair<string, string>> args = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(sourceId))
+                args.Add(new KeyValuePair<string, string>("source_id", sourceId));
+            if (!String.IsNullOrEmpty(sourceScreenName))
+                args.Add(new KeyValuePair<string, string>("source_screen_name", sourceScreenName));
+            if (!String.IsNullOrEmpty(targetId))
+                args.Add(new KeyValuePair<string, string>("target_id", targetId));
+            if (!String.IsNullOrEmpty(targetScreenName))
+                args.Add(new KeyValuePair<string, string>("target_screen_name", targetScreenName));
+            var ret = provider.RequestAPIv1("friendships/show.xml", CredentialProvider.RequestMethod.GET, args).Element("relationship");
+            if (ret != null)
+                return TwitterRelation.CreateByNode(ret);
+            else
+                return null;
+        }
+
+        #endregion
+
         #region Favorite methods
 
         /// <summary>

@@ -35,6 +35,9 @@ namespace Std.Tweak
             return new TwitterUser(uNode);
         }
 
+        /// <summary>
+        /// Create twitter user data from search node
+        /// </summary>
         public static TwitterUser CreateBySearchNode(XElement sNode)
         {
             var ret = new TwitterUser();
@@ -52,7 +55,11 @@ namespace Std.Tweak
         /// </summary>
         public TwitterUser() : base() { }
 
-        private TwitterUser(XElement uNode)
+        /// <summary>
+        /// Create twitter user class with XElements
+        /// </summary>
+        /// <param name="uNode"></param>
+        protected TwitterUser(XElement uNode)
         {
             this.Id = uNode.Element("id").ParseLong();
 

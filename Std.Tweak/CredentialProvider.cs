@@ -47,7 +47,7 @@ namespace Std.Tweak
         /// <summary>
         /// Request API
         /// </summary>
-        /// <param name="uriPrartial">target uri(partial)</param>
+        /// <param name="uri">target uri</param>
         /// <param name="method">target method</param>
         /// <param name="param">parameters</param>
         /// <returns>XML document</returns>
@@ -110,7 +110,7 @@ namespace Std.Tweak
             {
                 throw new Exceptions.TwitterException("Document read failed.", ioe);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }

@@ -66,23 +66,17 @@ namespace Std.Tweak.CredentialProviders
                 docType = DocumentTypes.Json;
             else
                 throw new ArgumentException("format can't identify. uriPartial is must ends with xml or json.");
-            
-            StringBuilder sb = new StringBuilder(uri);
-            if (param != null)
-            {
-                sb.Append("?");
-                foreach (var p in param)
-                    sb.Append(p.Key + "=" + p.Value + "&");
-            }
+
+            var target = CreateUri(uri, param);
 
             try
             {
-                System.Diagnostics.Debug.WriteLine(sb.ToString());
-                var req = Http.CreateRequest(new Uri(sb.ToString()), true);
+                System.Diagnostics.Debug.WriteLine(target.ToString());
+                var req = Http.CreateRequest(new Uri(target.ToString()), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
                 var ret = Http.WebConnect<XDocument>(
                     req,
-                    method.ToString(), null,
+                    method.ToString(), req.Credentials,
                     new Http.DStreamCallbackFull<XDocument>((res) =>
                     {
                         int rateLimit;
@@ -149,18 +143,12 @@ namespace Std.Tweak.CredentialProviders
             else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
 
-            StringBuilder sb = new StringBuilder(uri);
-            if (param != null)
-            {
-                sb.Append("?");
-                foreach (var p in param)
-                    sb.Append(p.Key + "=" + p.Value + "&");
-            }
+            var target = CreateUri(uri, param);
 
             try
             {
-                System.Diagnostics.Debug.WriteLine(sb.ToString());
-                var req = Http.CreateRequest(new Uri(sb.ToString()), true);
+                System.Diagnostics.Debug.WriteLine(target.ToString());
+                var req = Http.CreateRequest(new Uri(target.ToString()), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
                 req.ReadWriteTimeout = System.Threading.Timeout.Infinite;
                 req.Timeout = System.Threading.Timeout.Infinite;
@@ -196,6 +184,17 @@ namespace Std.Tweak.CredentialProviders
             }
 
             return null;
+        }
+
+        private string CreateUri(string uri, IEnumerable<KeyValuePair<string, string>> param)
+        {
+            if (param == null)
+                return uri;
+            var pstr =  String.Join("&", from p in param select p.Key + "=" + p.Value);
+            if (String.IsNullOrEmpty(pstr))
+                return uri;
+            else
+                return uri + "?" + pstr;
         }
     }
 }

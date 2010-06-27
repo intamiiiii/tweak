@@ -42,7 +42,7 @@ namespace Std.Tweak
         /// Twitter status constructor with XML data
         /// </summary>
         /// <param name="node"></param>
-        private TwitterStatus(XElement node)
+        protected TwitterStatus(XElement node)
             : base()
         {
             //System.Diagnostics.Debug.WriteLine(node.ToString());

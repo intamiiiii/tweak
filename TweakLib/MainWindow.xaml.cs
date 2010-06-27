@@ -12,7 +12,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Std.Tweak.Streaming;
-
+using Std.Tweak.CredentialProviders;
+using Std.Tweak;
 namespace TweakLib
 {
     /// <summary>
@@ -23,6 +24,10 @@ namespace TweakLib
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
         }
     }
 }
