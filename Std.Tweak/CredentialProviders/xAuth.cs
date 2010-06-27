@@ -23,10 +23,7 @@ namespace Std.Tweak.CredentialProviders
         const string XAuthPassword = "x_auth_password";
         const string XAuthMode = "x_auth_mode";
 
-        /// <summary>
-        /// Uri for get access token from xAuth provider
-        /// </summary>
-        protected abstract string XAuthProviderAccessTokenUrl { get; }
+        const string xAuthProviderAccessTokenUrl = "https://twitter.com/oauth/access_token";
 
         /// <summary>
         /// Get access token via xAuth credential
@@ -45,7 +42,7 @@ namespace Std.Tweak.CredentialProviders
             para.Add(new KeyValuePair<string, string>(XAuthPassword, UrlEncode(password, Encoding.Default, true)));
             para.Add(new KeyValuePair<string, string>(XAuthMode, "client_auth"));
 
-            var target = CreateUrl(XAuthProviderAccessTokenUrl, RequestMethod.POST, para);
+            var target = CreateUrl(xAuthProviderAccessTokenUrl, RequestMethod.POST, para);
             try
             {
                 var ret = Http.WebConnectDownloadString(new Uri(target), "POST", null);
