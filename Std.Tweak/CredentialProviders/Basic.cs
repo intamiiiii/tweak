@@ -57,20 +57,28 @@ namespace Std.Tweak.CredentialProviders
                 throw new ArgumentNullException(uri);
             else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
-            var target = uri;
 
             DocumentTypes docType = DocumentTypes.Invalid;
 
-            if (target.EndsWith("xml"))
+            if (uri.EndsWith("xml"))
                 docType = DocumentTypes.Xml;
-            else if (target.EndsWith("json"))
+            else if (uri.EndsWith("json"))
                 docType = DocumentTypes.Json;
             else
                 throw new ArgumentException("format can't identify. uriPartial is must ends with xml or json.");
+            
+            StringBuilder sb = new StringBuilder(uri);
+            if (param != null)
+            {
+                sb.Append("?");
+                foreach (var p in param)
+                    sb.Append(p.Key + "=" + p.Value + "&");
+            }
 
             try
             {
-                var req = Http.CreateRequest(new Uri(target), true);
+                System.Diagnostics.Debug.WriteLine(sb.ToString());
+                var req = Http.CreateRequest(new Uri(sb.ToString()), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
                 var ret = Http.WebConnect<XDocument>(
                     req,
@@ -140,12 +148,22 @@ namespace Std.Tweak.CredentialProviders
                 throw new ArgumentNullException(uri);
             else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
-            var target = uri;
+
+            StringBuilder sb = new StringBuilder(uri);
+            if (param != null)
+            {
+                sb.Append("?");
+                foreach (var p in param)
+                    sb.Append(p.Key + "=" + p.Value + "&");
+            }
 
             try
             {
-                var req = Http.CreateRequest(new Uri(target), true);
+                System.Diagnostics.Debug.WriteLine(sb.ToString());
+                var req = Http.CreateRequest(new Uri(sb.ToString()), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
+                req.ReadWriteTimeout = System.Threading.Timeout.Infinite;
+                req.Timeout = System.Threading.Timeout.Infinite;
                 var ret = Http.WebConnectStreaming(
                     req,
                     method.ToString());

@@ -56,7 +56,12 @@ namespace Std.Tweak
             /// <summary>
             /// This tweet is kind of direct message.
             /// </summary>
-            DirectMessage }
+            DirectMessage,
+            /// <summary>
+            /// This tweet got from search API, so few informations is sometimes not correct.
+            /// </summary>
+            SearchResult
+        }
 
         /// <summary>
         /// Status kind

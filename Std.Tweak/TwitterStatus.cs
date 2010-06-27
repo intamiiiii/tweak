@@ -17,13 +17,35 @@ namespace Std.Tweak
         }
 
         /// <summary>
+        /// Create twitter status from search api node
+        /// </summary>
+        public static TwitterStatus CreateBySearchNode(XElement sNode)
+        {
+            var ts = new TwitterStatus();
+            ts.Id = sNode.Element("id").ParseLong();
+            ts.Truncated = false;
+            ts.Text = sNode.Element("text").ParseString();
+            ts.Source = sNode.Element("source").ParseString();
+            ts.Favorited = false;
+            ts.CreatedAt = sNode.Element("created_at").ParseDateTime("ddd MMM d HH':'mm':'ss zzz yyyy");
+            ts.InReplyToStatusId = 0;
+            ts.InReplyToUserId = sNode.Element("to_user_id").ParseString();
+            ts.InReplyToScreenName = sNode.Element("to_user").ParseString();
+            ts.Kind = StatusKind.SearchResult;
+            ts.User = TwitterUser.CreateBySearchNode(sNode);
+            return ts;
+        }
+
+        private TwitterStatus() { }
+
+        /// <summary>
         /// Twitter status constructor with XML data
         /// </summary>
         /// <param name="node"></param>
         private TwitterStatus(XElement node)
             : base()
         {
-            System.Diagnostics.Debug.WriteLine(node.ToString());
+            //System.Diagnostics.Debug.WriteLine(node.ToString());
             this.Id = node.Element("id").ParseLong();
 
             this.Truncated = node.Element("truncated").ParseBool();

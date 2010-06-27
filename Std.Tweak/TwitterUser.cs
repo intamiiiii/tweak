@@ -35,6 +35,17 @@ namespace Std.Tweak
             return new TwitterUser(uNode);
         }
 
+        public static TwitterUser CreateBySearchNode(XElement sNode)
+        {
+            var ret = new TwitterUser();
+            ret.Id = sNode.Element("from_user_id").ParseLong();
+            ret.ScreenName = sNode.Element("from_user").ParseString();
+            ret.Lang = sNode.Element("iso_language_code").ParseString();
+            ret.Protected = false;
+            ret.Profile = new ProfileInformation();
+            return ret;
+        }
+
         /// <summary>
         /// A class for twitter user data.<para/>
         /// Use CreateByNode(XElement), if you want to create instance with analying xml.
@@ -55,7 +66,7 @@ namespace Std.Tweak
 
             this.ProfileImageUrl = uNode.Element("profile_image_url").ParseUri();
 
-            this.Url = uNode.Element("url").ParseUri();
+            this.Url = uNode.Element("url").ParseString();
 
             this.Protected = uNode.Element("protected").ParseBool(true);
 
@@ -98,17 +109,23 @@ namespace Std.Tweak
         }
 
         /// <summary>
-        /// User id
+        /// User id<para/>
+        /// If you get user information via search api, this value is different of<para/>
+        /// other apis(ex: statuses, users, etc).<para/>
+        /// You can use ScreenName as general ID.
         /// </summary>
         public long Id { get; set; }
 
         /// <summary>
-        /// User name
+        /// User name<para/>
+        /// this is NOT identification name(@...), but profile name.<para/>
+        /// if you want identification name, please see ScreenName.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// User screen name
+        /// User screen name<para/>
+        /// Identification name is this.
         /// </summary>
         public string ScreenName { get; set; }
 
@@ -130,7 +147,7 @@ namespace Std.Tweak
         /// <summary>
         /// User url
         /// </summary>
-        public Uri Url { get; set; }
+        public string Url { get; set; }
 
         /// <summary>
         /// Is protected this user
