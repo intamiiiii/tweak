@@ -53,6 +53,21 @@ namespace Std.Tweak.Streaming
         #region Public methods
 
         /// <summary>
+        /// Data observing mode
+        /// </summary>
+        public enum DataObserveMode
+        {
+            /// <summary>
+            /// Callback with events
+            /// </summary>
+            CallbackEvents,
+            /// <summary>
+            /// Using enumerate function
+            /// </summary>
+            EnumerateXmlOrElement
+        }
+
+        /// <summary>
         /// Start streaming receive
         /// </summary>
         /// <param name="provider">using credential</param>
@@ -62,8 +77,11 @@ namespace Std.Tweak.Streaming
         /// <param name="follow">following user's id</param>
         /// <param name="track">tracking keywords</param>
         /// <param name="locations">location area of tweet</param>
-        public static void StartStreaming(this CredentialProvider provider, StreamingType type, int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
+        public static void StartStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
         {
+            if (streamThread != null)
+                throw new InvalidOperationException("Thread is now working. Stop old thread before start new.");
+
             // argument check
             switch (type)
             {
@@ -104,8 +122,15 @@ namespace Std.Tweak.Streaming
                 args.Add(new KeyValuePair<string,string>("track", track));
             if (locations != null)
                 args.Add(new KeyValuePair<string, string>("locations", locations));
-            queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
-            queueTreatingThread.Start();
+
+            // clear receiving queue
+            recvQueue.Clear();
+            
+            if (observeMode == DataObserveMode.CallbackEvents)
+            {
+                queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
+                queueTreatingThread.Start();
+            }
             streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));
             System.Diagnostics.Debug.WriteLine("URL:" + GetStreamingUri(type) + ", arg:" + args.ToString());
             var strm = provider.RequestStreamingAPI(GetStreamingUri(type), CredentialProvider.RequestMethod.POST, args);
@@ -117,8 +142,12 @@ namespace Std.Tweak.Streaming
         /// </summary>
         public static void EndStreaming()
         {
-            streamThread.Abort();
-            queueTreatingThread.Abort();
+            if (streamThread != null)
+                streamThread.Abort();
+            streamThread = null;
+            if (queueTreatingThread != null)
+                queueTreatingThread.Abort();
+            queueTreatingThread = null;
         }
 
         /// <summary>
@@ -159,34 +188,85 @@ namespace Std.Tweak.Streaming
             }
         }
 
+        /// <summary>
+        /// Enumerate received XElements (proxy)
+        /// </summary>
+        public static IEnumerable<TwitterStreamingElement> EnumerateStreaming(this CredentialProvider provider)
+        {
+            return EnumerateStreaming();
+        }
+
+        /// <summary>
+        /// Enumerate received XElements with automaic parsing (proxy)
+        /// </summary>
+        public static IEnumerable<XElement> EnumerateStreamingAsXml(this CredentialProvider provider)
+        {
+            return EnumerateStreamingAsXml();
+        }
+
+        /// <summary>
+        /// Enumerate received XElements
+        /// </summary>
+        public static IEnumerable<XElement> EnumerateStreamingAsXml()
+        {
+            return EnumerateStrings().Select((s) =>
+                {
+                    using (var json = JsonReaderWriterFactory.CreateJsonReader(Encoding.UTF8.GetBytes(s), System.Xml.XmlDictionaryReaderQuotas.Max))
+                        return XElement.Load(json);
+                });
+        }
+
+
+        /// <summary>
+        /// Enumerate received XElements with automatic parsing
+        /// </summary>
+        public static IEnumerable<TwitterStreamingElement> EnumerateStreaming()
+        {
+            return EnumerateStrings().Select((s) =>
+            {
+                using (var json = JsonReaderWriterFactory.CreateJsonReader(Encoding.UTF8.GetBytes(s), System.Xml.XmlDictionaryReaderQuotas.Max))
+                    return TwitterStreamingElement.CreateByNode(XElement.Load(json));
+            });
+        }
+
         static ManualResetEvent queueTracker = new ManualResetEvent(true);
+        private static IEnumerable<string> EnumerateStrings()
+        {
+            while (true)
+            {
+                queueTracker.Reset();
+                if (streamThread == null)
+                    yield break;
+                if (recvQueue.Count > 0)
+                {
+                    var str = recvQueue.Dequeue();
+                    if (String.IsNullOrWhiteSpace(str))
+                        continue;
+                    yield return str;
+                }
+                else
+                {
+                    queueTracker.WaitOne(1000);
+                }
+            }
+        }
+
         /// <summary>
         /// queue deque &amp; treating thread
         /// </summary>
         private static void QueueDequeueThread()
         {
-            while (true)
+            foreach (var str in EnumerateStrings())
             {
-                queueTracker.Reset();
-                if (recvQueue.Count > 0)
+                if (ParseWithMultiThreading)
                 {
-                    var str = recvQueue.Dequeue();
-                    if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(str.Trim()))
-                        continue;
-                    if (ParseWithMultiThreading)
-                    {
-                        // send childmethod
-                        var act = new Action<string>(ParseJson);
-                        act.BeginInvoke(str, (iar) => ((Action<string>)iar.AsyncState).EndInvoke(iar), act);
-                    }
-                    else
-                    {
-                        ParseJson(str);
-                    }
+                    // send childmethod
+                    var act = new Action<string>(ParseJson);
+                    act.BeginInvoke(str, (iar) => ((Action<string>)iar.AsyncState).EndInvoke(iar), act);
                 }
                 else
                 {
-                    queueTracker.WaitOne();
+                    ParseJson(str);
                 }
             }
         }
@@ -217,7 +297,7 @@ namespace Std.Tweak.Streaming
         private static void ParseNormalStatus(XElement elem)
         {
             var ts = TwitterStatus.CreateByNode(elem);
-            if (ts != null)
+            if (ts != null && OnReceivedStatus != null)
                 OnReceivedStatus.Invoke(ts);
         }
 
@@ -227,7 +307,7 @@ namespace Std.Tweak.Streaming
         private static void ParseDeleteNotify(XElement elem)
         {
             var sid = elem.Element("id").ParseLong();
-            if (sid > 0)
+            if (sid > 0 && OnDeleteRequired != null)
                 OnDeleteRequired.Invoke(sid);
         }
 
@@ -238,7 +318,7 @@ namespace Std.Tweak.Streaming
         private static void ParseLimitationNotify(XElement elem)
         {
             var track = elem.Element("track").ParseLong();
-            if (track != 0)
+            if (track != 0 && OnTrackReceived != null)
                 OnTrackReceived.Invoke(track);
         }
 
@@ -247,7 +327,7 @@ namespace Std.Tweak.Streaming
         /// </summary>
         private static void ParseUndefined(XElement elem)
         {
-            if (elem != null)
+            if (elem != null && OnUndefinedXMLReceived != null)
                 OnUndefinedXMLReceived.Invoke(elem);
         }
 
@@ -315,7 +395,11 @@ namespace Std.Tweak.Streaming
             /// Arguments:<para/>
             ///   delimited: data length(byte)
             /// </summary>
-            retweet
+            retweet,
+            /// <summary>
+            /// Beta
+            /// </summary>
+            chirp
         }
 
         const string SapiV1 = "http://stream.twitter.com/1/statuses/{0}.json";
@@ -332,6 +416,8 @@ namespace Std.Tweak.Streaming
                 case StreamingType.retweet:
                 case StreamingType.filter:
                     return String.Format(SapiV1, type.ToString());
+                case StreamingType.chirp:
+                    return "http://chirpstream.twitter.com/2b/user.json";
                 default:
                     throw new ArgumentOutOfRangeException("Invalid enum value");
             }

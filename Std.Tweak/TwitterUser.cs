@@ -279,7 +279,7 @@ namespace Std.Tweak
         /// </summary>
         public override string ToString()
         {
-            return Name;
+            return "@" + ScreenName + "(" + Name + ")";
         }
     }
 

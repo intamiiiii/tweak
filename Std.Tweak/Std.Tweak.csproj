@@ -71,6 +71,7 @@
     <Compile Include="TwitterRelation.cs" />
     <Compile Include="TwitterStatus.cs" />
     <Compile Include="TwitterStatusBase.cs" />
+    <Compile Include="Streaming\TwitterStreamingElement.cs" />
     <Compile Include="TwitterUser.cs" />
   </ItemGroup>
   <ItemGroup>
