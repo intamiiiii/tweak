@@ -46,19 +46,38 @@
             <Label Content="Timeline"/>
             <Label Content="Activity" Grid.Column="1"/>
             <GridSplitter Width="2" VerticalAlignment="Stretch" Grid.RowSpan="2" />
-            <ListBox Name="TimelineList" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox Name="TimelineList" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Name="OpenBrowser" Header="ブラウザで開く" Click="OpenBrowser_Click" />
+                        <MenuItem Name="OpenProfile" Header="この人をブラウザで開く" Click="OpenProfile_Click" />
+                        <Separator />
+                        <MenuItem Name="Retweet" Header="このツイートを公式リツイート" Click="Retweet_Click"/>
+                        <MenuItem Name="Fav" Header="このツイートをFav" Click="Fav_Click"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
+                        <Grid HorizontalAlignment="Stretch" Margin="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Background="Gainsboro">
-                                <Image Width="20" Height="20" VerticalAlignment="Center" Source="{Binding Path=User.ProfileImageUrl, Converter={StaticResource ImgConv}}" />
-                                <Label VerticalAlignment="Center" Content="{Binding User.ScreenName}"  />
-                            </StackPanel>
-                            <TextBlock Margin="3" Grid.Column="1" DockPanel.Dock="Top" Text="{Binding Text}" TextWrapping="Wrap" />
+                            <Grid Background="Gainsboro">
+                                <Image Width="40" Height="40" VerticalAlignment="Top" Margin="2,2,1,2" Source="{Binding Path=User.ProfileImageUrl, Converter={StaticResource ImgConv}}" />
+                            </Grid>
+                            <Grid Grid.Column="1" HorizontalAlignment="Stretch">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid Background="Gainsboro">
+                                    <TextBlock Margin="2" Text="{Binding Path=User.ScreenName, StringFormat=@{0}}" HorizontalAlignment="Stretch" />
+                                </Grid>
+                                <TextBlock Margin="2" Grid.Row="1" Text="{Binding Text}" TextWrapping="Wrap" HorizontalAlignment="Stretch" />
+                                <TextBlock HorizontalAlignment="Stretch" Grid.Row="2" Margin="1" Text="{Binding CreatedAt}" TextAlignment="Right" />
+                            </Grid>
                         </Grid>
                      </DataTemplate>
                 </ListBox.ItemTemplate>

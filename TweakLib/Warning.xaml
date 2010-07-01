@@ -1,0 +1,20 @@
+﻿<Window x:Class="TweakLib.Warning"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Warning" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="254" Width="610" ResizeMode="NoResize" WindowStyle="ToolWindow" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Label Height="28" VerticalAlignment="Top" Foreground="Red" Background="Pink">
+            <Bold>警告</Bold>
+        </Label>
+        <TextBlock Margin="12,32,2,31">
+            このクライアントは、まだ正式にリリースされていないストリーミングAPIである、<LineBreak/>
+            「ChirpUserStreams」のテストを目的として作られたものです。<LineBreak/>
+            <LineBreak/>
+            このソフトウェアもTweakライブラリ同様、一切のサポートを行いません。<LineBreak/>
+            <LineBreak/>
+            このソフトウェアを使うことにより、アカウントストップや剥奪等の憂き目に遭遇する可能性があります。<LineBreak/>
+            それでも利用する場合は、<Bold>readme.txtを熟読したうえで</Bold>ご利用ください。
+        </TextBlock>
+        <Button Content="Close" Height="23" HorizontalAlignment="Left" Margin="511,190,0,0" Name="button1" VerticalAlignment="Top" Width="75" Click="button1_Click" />
+    </Grid>
+</Window>

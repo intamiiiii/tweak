@@ -119,7 +119,7 @@ namespace Std.Tweak.CredentialProviders
             }
             catch (WebException we)
             {
-                System.Diagnostics.Debug.WriteLine(we.ToString());
+                throw new Exceptions.TwitterRequestException(we);
             }
             catch (XmlException xe)
             {
@@ -129,8 +129,6 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw;
             }
-
-            return null;
         }
 
         /// <summary>
@@ -172,7 +170,7 @@ namespace Std.Tweak.CredentialProviders
             }
             catch (WebException we)
             {
-                System.Diagnostics.Debug.WriteLine(we.ToString());
+                throw new Exceptions.TwitterRequestException(we);
             }
             catch (XmlException xe)
             {
@@ -182,8 +180,6 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw;
             }
-
-            return null;
         }
 
         private string CreateUri(string uri, IEnumerable<KeyValuePair<string, string>> param)

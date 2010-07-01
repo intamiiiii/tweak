@@ -15,6 +15,14 @@ namespace Std.Tweak.Streaming
     /// </summary>
     public static class StreamingApi
     {
+        /// <summary>
+        /// Get if streaming api provider provides streaming now
+        /// </summary>
+        public static bool IsStreaming
+        {
+            get { return streamThread != null; }
+        }
+
         static Thread streamThread = null;
         static Thread queueTreatingThread = null;
 
@@ -72,12 +80,13 @@ namespace Std.Tweak.Streaming
         /// </summary>
         /// <param name="provider">using credential</param>
         /// <param name="type">type of streaming</param>
+        /// <param name="observeMode">data observing mode</param>
         /// <param name="delimitered">delimiter length</param>
         /// <param name="count">backlog count</param>
         /// <param name="follow">following user's id</param>
         /// <param name="track">tracking keywords</param>
         /// <param name="locations">location area of tweet</param>
-        public static void StartStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
+        public static bool StartStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
         {
             if (streamThread != null)
                 throw new InvalidOperationException("Thread is now working. Stop old thread before start new.");
@@ -131,10 +140,16 @@ namespace Std.Tweak.Streaming
                 queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
                 queueTreatingThread.Start();
             }
-            streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));
             System.Diagnostics.Debug.WriteLine("URL:" + GetStreamingUri(type) + ", arg:" + args.ToString());
             var strm = provider.RequestStreamingAPI(GetStreamingUri(type), CredentialProvider.RequestMethod.POST, args);
-            streamThread.Start(strm);
+            if (strm != null)
+            {
+                streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));
+                streamThread.Start(strm);
+                return true;
+            }
+            else
+                return false;
         }
 
         /// <summary>
@@ -166,6 +181,7 @@ namespace Std.Tweak.Streaming
 
         private static void StreamingThread(object streamarg)
         {
+            
             var str = streamarg as Stream;
             if(str == null)
                 return;

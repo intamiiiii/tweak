@@ -218,20 +218,44 @@ namespace Std.Tweak.Streaming
             Undefined
         }
 
+        /// <summary>
+        /// Raw XElement object
+        /// </summary>
         public XElement RawXElement { get; private set; }
 
+        /// <summary>
+        /// Kind of this element
+        /// </summary>
         public ElementKind Kind { get; private set; }
 
+        /// <summary>
+        /// Status ID (uses notifing deleted status)
+        /// </summary>
         public long DeletedStatusId { get; private set; }
 
+        /// <summary>
+        /// Status instance
+        /// </summary>
         public TwitterStatus Status { get; private set; }
 
+        /// <summary>
+        /// User enumerations
+        /// </summary>
         public IEnumerable<long> UserEnumerations { get; private set; }
 
+        /// <summary>
+        /// Source user
+        /// </summary>
         public TwitterUser SourceUser { get; private set; }
 
+        /// <summary>
+        /// Target user
+        /// </summary>
         public TwitterUser TargetUser { get; private set; }
 
+        /// <summary>
+        /// Target list
+        /// </summary>
         public TwitterList TargetList { get; private set; }
     }
 }

@@ -32,6 +32,7 @@ namespace TweakLib
         ObservableCollection<string> activities = null;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            (new Warning() { Owner = this }).ShowDialog();
             status = new ObservableCollection<TwitterStatus>();
             activities = new ObservableCollection<string>();
             TimelineList.ItemsSource = status;
@@ -111,6 +112,47 @@ namespace TweakLib
         private void Window_Closed(object sender, EventArgs e)
         {
             b.EndStreaming();
+        }
+
+        private void OpenBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            var status = TimelineList.SelectedItem as TwitterStatus;
+            if (status != null)
+            {
+                System.Diagnostics.Process.Start("http://twitter.com/" + status.User.ScreenName + "/status/" + status.Id.ToString());
+            }
+        }
+
+        private void OpenProfile_Click(object sender, RoutedEventArgs e)
+        {
+            var status = TimelineList.SelectedItem as TwitterStatus;
+            if (status != null)
+            {
+                System.Diagnostics.Process.Start("http://twitter.com/" + status.User.ScreenName);
+            }
+        }
+
+        private void Retweet_Click(object sender, RoutedEventArgs e)
+        {
+            var status = TimelineList.SelectedItem as TwitterStatus;
+            if (status != null)
+            {
+                if (MessageBox.Show(
+                    "公式リツイートしますか？" + Environment.NewLine +
+                    "(すでにリツイートしている場合、この操作は無視されます)", "公式リツイートの確認", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    b.Retweet(status.Id);
+                }
+            }
+        }
+
+        private void Fav_Click(object sender, RoutedEventArgs e)
+        {
+            var status = TimelineList.SelectedItem as TwitterStatus;
+            if (status != null)
+            {
+                b.CreateFavorites(status.Id);
+            }
         }
     }
 

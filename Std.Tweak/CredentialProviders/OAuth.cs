@@ -138,7 +138,7 @@ namespace Std.Tweak.CredentialProviders
             }
             catch (WebException we)
             {
-                System.Diagnostics.Debug.WriteLine(we.ToString());
+                throw new Exceptions.TwitterRequestException(we);
             }
             catch (XmlException xe)
             {
@@ -148,8 +148,6 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw;
             }
-
-            return null;
         }
 
         /// <summary>
@@ -193,7 +191,7 @@ namespace Std.Tweak.CredentialProviders
             }
             catch (WebException we)
             {
-                throw new Exceptions.TwitterException("Exception thrown.", we);
+                throw new Exceptions.TwitterRequestException(we);
             }
             catch (IOException)
             {
@@ -372,11 +370,17 @@ namespace Std.Tweak.CredentialProviders
 
         #region Negotiation method
 
+        /// <summary>
+        /// Create request uri
+        /// </summary>
         protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
         {
             return CreateUrl(uri, method, param, null);
         }
 
+        /// <summary>
+        /// Create request uri
+        /// </summary>
         protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin)
         {
             StringBuilder sb = new StringBuilder();
@@ -428,6 +432,9 @@ namespace Std.Tweak.CredentialProviders
             return result.ToString();
         }
 
+        /// <summary>
+        /// Split parameters into dictionary
+        /// </summary>
         protected Dictionary<string, string> SplitParamDict(string param)
         {
             var retdict = new Dictionary<string, string>();
@@ -440,6 +447,9 @@ namespace Std.Tweak.CredentialProviders
             return retdict;
         }
 
+        /// <summary>
+        /// Split parameters and enumerate results
+        /// </summary>
         protected IEnumerable<KeyValuePair<string, string>> SplitParam(string paramstring)
         {
             paramstring.TrimStart('?');
@@ -461,6 +471,9 @@ namespace Std.Tweak.CredentialProviders
             }
         }
 
+        /// <summary>
+        /// Join parameters to string
+        /// </summary>
         protected string JoinParam(IEnumerable<KeyValuePair<string, string>> param)
         {
             var jparam = from p in param
