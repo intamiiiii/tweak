@@ -86,7 +86,7 @@ namespace Std.Tweak.Streaming
         /// <param name="follow">following user's id</param>
         /// <param name="track">tracking keywords</param>
         /// <param name="locations">location area of tweet</param>
-        public static bool StartStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
+        public static bool BeginStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
         {
             if (streamThread != null)
                 throw new InvalidOperationException("Thread is now working. Stop old thread before start new.");

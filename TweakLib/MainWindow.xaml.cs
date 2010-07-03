@@ -46,8 +46,8 @@ namespace TweakLib
         {
             b = new Basic(id, pw);
             StreamingApi.OnDisconnected += new Action(StreamingApi_OnDisconnected);
-            b.StartStreaming(StreamingApi.StreamingType.chirp, StreamingApi.DataObserveMode.EnumerateXmlOrElement);
-            foreach (var i in b.EnumerateStreaming())
+            b.BeginStreaming(StreamingApi.StreamingType.chirp, StreamingApi.DataObserveMode.EnumerateXmlOrElement);
+            foreach (var i in b.EnumerateStreaming().AsParallel())
             {
                 switch (i.Kind)
                 {

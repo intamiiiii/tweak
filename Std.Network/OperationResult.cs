@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
 
 namespace Std.Network
 {
@@ -33,14 +34,23 @@ namespace Std.Network
         public string Message { get; private set; }
 
         /// <summary>
+        /// Http status code
+        /// </summary>
+        public HttpStatusCode StatusCode { get; private set; }
+
+        /// <summary>
         /// Returned data
         /// </summary>
         public T Data { get; private set; }
 
-        private OperationResult(Uri target, bool succeeded, T data, string message, Exception thrown)
+        /// <summary>
+        /// Operation result
+        /// </summary>
+        public OperationResult(Uri target, bool succeeded, HttpStatusCode statusCode, T data, string message, Exception thrown)
         {
             this.Target = target;
             this.Succeeded = succeeded;
+            this.StatusCode = statusCode;
             this.Data = data;
             this.Message = message;
             this.Exception = thrown;
@@ -52,19 +62,16 @@ namespace Std.Network
         /// <param name="target">target</param>
         /// <param name="data">return data</param>
         /// <param name="message">message</param>
-        public OperationResult(Uri target, T data, string message)
-            : this(target, true, data, message, null) { }
+        public OperationResult(Uri target, HttpStatusCode statusCode, T data, string message = null)
+            : this(target, true, statusCode, data, message, null) { }
 
         /// <summary>
-        /// Succeeded result
+        /// Succeeded result(old)
         /// </summary>
-        /// <param name="target">target</param>
-        /// <param name="data">return data</param>
-        public OperationResult(Uri target, T data)
-            : this(target, data, null) { }
+        [Obsolete("Please set status code.")]
+        public OperationResult(Uri target, T data, string message = null)
+            : this(target, (HttpStatusCode)0, data , message) { }
 
-        public OperationResult(Uri target, Exception thrown)
-            : this(target, thrown, thrown.Message) { }
 
         /// <summary>
         /// Failed result
@@ -72,17 +79,7 @@ namespace Std.Network
         /// <param name="target">target uri</param>
         /// <param name="thrown">thrown exception</param>
         /// <param name="message">returning message</param>
-        public OperationResult(Uri target, Exception thrown, string message)
-            : this(target, false, default(T), message, thrown) { }
-
-        /// <summary>
-        /// Custom result
-        /// </summary>
-        /// <param name="target">target uri</param>
-        /// <param name="succeeded">succeeded flag</param>
-        /// <param name="data">link data</param>
-        /// <param name="message">message</param>
-        public OperationResult(Uri target, bool succeeded, T data, string message)
-            : this(target, succeeded, data, message, null) { }
+        public OperationResult(Uri target, Exception thrown, HttpStatusCode statusCode = 0, string message = null)
+            : this(target, false,  statusCode, default(T), message, thrown) { }
     }
 }

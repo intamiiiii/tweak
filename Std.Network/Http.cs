@@ -264,7 +264,7 @@ namespace Std.Network
 
         /// <summary>
         /// Request to web forms.<para />
-        /// (use x-www-form-urlencoded)
+        /// (use POST/x-www-form-urlencoded)
         /// </summary>
         /// <typeparam name="T">Return type</typeparam>
         /// <param name="req">request</param>
@@ -374,7 +374,8 @@ namespace Std.Network
                     }
                     if (send.filemode)
                     {
-                        sbs[idx].Append(separator + "Content-Disposition: form-data; name=\"" + send.Name + "\"; filename=\"" + Path.GetFileName(send.textorfilename) + "\"\r\n");
+                        sbs[idx].Append(separator + 
+                            "Content-Disposition: form-data; name=\"" + send.Name + "\"; filename=\"" + Path.GetFileName(send.textorfilename) + "\"\r\n");
                         sbs[idx].Append("Content-Type: application/octet-stream\r\n");
                         sbs[idx].Append("Content-Transfer-Encoding: binary\r\n\r\n");
                         sbs.Add(new StringBuilder());
@@ -480,7 +481,10 @@ namespace Std.Network
                         else
                             throw new ArgumentNullException("callback/callbackFull", "param callback or callbackFull must be set.");
                     default:
-                        return new OperationResult<T>(response.ResponseUri, false, default(T), GetDescription(response.StatusCode));
+                        return new OperationResult<T>(
+                            response.ResponseUri,
+                            null,
+                            response.StatusCode);
                 }
             }
             catch (Exception e)
