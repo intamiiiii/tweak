@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("StarWing.net")]
 [assembly: AssemblyProduct("Std.Tweak")]
-[assembly: AssemblyCopyright("Copyright © starwing.net, park (kagisenritsu)")]
+[assembly: AssemblyCopyright("Copyright © karno, all rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
