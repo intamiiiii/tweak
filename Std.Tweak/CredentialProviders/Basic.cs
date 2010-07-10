@@ -141,18 +141,20 @@ namespace Std.Tweak.CredentialProviders
             else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
 
-            var target = CreateUri(uri, param);
+            var target = method == RequestMethod.GET ? CreateUri(uri, param) : uri;
 
             try
             {
-                System.Diagnostics.Debug.WriteLine(target.ToString());
-                var req = Http.CreateRequest(new Uri(target.ToString()), true);
-                req.Credentials = new System.Net.NetworkCredential(UserName, Password);
-                req.ReadWriteTimeout = System.Threading.Timeout.Infinite;
-                req.Timeout = System.Threading.Timeout.Infinite;
-                var ret = Http.WebConnectStreaming(
-                    req,
-                    method.ToString());
+                var ret =
+                    method == RequestMethod.GET ?
+                        HttpWeb.WebConnect<Stream>(
+                            HttpWeb.CreateRequest(new Uri(target), method.ToString(),
+                            credential: new NetworkCredential(UserName, Password)),
+                            responseconv: HttpWeb.ResponseConverters.GetStream) :
+                        HttpWeb.WebFormSendString<Stream>(
+                            HttpWeb.CreateRequest(new Uri(target), method.ToString(),
+                            credential: new NetworkCredential(UserName, Password)), param, Encoding.UTF8,
+                            responseconv: HttpWeb.ResponseConverters.GetStream);
                 System.Diagnostics.Debug.WriteLine("Connected");
                if (ret.Succeeded && ret.Data != null)
                 {

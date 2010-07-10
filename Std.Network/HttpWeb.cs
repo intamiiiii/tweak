@@ -82,6 +82,17 @@ namespace Std.Network
             }
         }
 
+        /// <summary>
+        /// Common response converters
+        /// </summary>
+        public static class ResponseConverters
+        {
+            public static Stream GetStream(HttpWebResponse res)
+            {
+                return res.GetResponseStream();
+            }
+        }
+
         #endregion
 
         /// <summary>
@@ -143,7 +154,7 @@ namespace Std.Network
             ResponseConverter<T> responseconv = null,
             byte[] senddata = null)
         {
-            if(streamconv == null ^ responseconv == null)
+            if(!(streamconv == null ^ responseconv == null))
                 throw new ArgumentException("StreamConverter or ResponseConverter is must set.");
 
             try
@@ -160,11 +171,7 @@ namespace Std.Network
                         s.Write(senddata, 0, senddata.Length);
                     }
                 }
-                using (var res = req.GetResponse())
-                {
-                    return TreatWebResponse<T>(
-                        (HttpWebResponse)res, streamconv, responseconv);
-                }
+                return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
             }
             catch (SocketException e)
             {
@@ -257,8 +264,7 @@ namespace Std.Network
                         }
                     }
                 }
-                var res = (HttpWebResponse)req.GetResponse();
-                return TreatWebResponse(res, streamconv, responseconv);
+                return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
             }
             catch (SocketException e)
             {
@@ -281,7 +287,7 @@ namespace Std.Network
         private static OperationResult<T> TreatWebResponse<T>
             (HttpWebResponse res, StreamConverter<T> strconv, ResponseConverter<T> resconv)
         {
-            if (strconv == null ^ resconv == null)
+            if (!(strconv == null ^ resconv == null))
                 throw new ArgumentException("StreamConverter or ResponseConverter is must set.");
             try
             {
@@ -314,7 +320,7 @@ namespace Std.Network
                         {
                             throw new InvalidOperationException("StreamConverter or ResponseConverter is must set.");
                         }
-                        break;
+
                     default:
                         return new OperationResult<T>(
                             res.ResponseUri,
@@ -350,6 +356,7 @@ namespace Std.Network
             return WebConnectDownloadString(
                 CreateRequest(uri, method, credential: credential));
         }
+
     }
 
     /// <summary>
@@ -433,7 +440,7 @@ namespace Std.Network
         public SendData(string name, string text = null, string file = null)
             : this(name, text)
         {
-            if (text == null ^ file == null)
+            if (!(text == null ^ file == null))
                 throw new ArgumentException("Specified value is not setted or setted excess.");
 
             this.FilePath = file;

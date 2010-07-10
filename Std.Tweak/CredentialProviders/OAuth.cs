@@ -93,10 +93,9 @@ namespace Std.Tweak.CredentialProviders
             var authuri = CreateUrl(target, method, param);
             try
             {
-                var ret = Http.WebConnect<XDocument>(
-                    Http.CreateRequest(new Uri(authuri), true),
-                    method.ToString(), null,
-                    new Http.DStreamCallbackFull<XDocument>((res) =>
+                var ret= HttpWeb.WebConnect<XDocument>(
+                    HttpWeb.CreateRequest(new Uri(authuri), method.ToString()),
+                    responseconv: new HttpWeb.ResponseConverter<XDocument>((res) =>
                     {
                         int rateLimit;
                         if (int.TryParse(res.Headers["X-RateLimit-Limit"], out rateLimit))
@@ -169,12 +168,15 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
             }
-            var authuri = CreateUrl(target, method, param);
+
+            var authuri = method == RequestMethod.GET ? CreateUrl(target, method, param) : CreateUrl(target, method, null);
             try
             {
-                var ret = Http.WebConnectStreaming(
-                    Http.CreateRequest(new Uri(authuri), true),
-                    method.ToString());
+                var req = HttpWeb.CreateRequest(new Uri( uri), method.ToString());
+                var ret =
+                    method == RequestMethod.GET ?
+                    HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream) :
+                    HttpWeb.WebFormSendString<Stream>(req, param, Encoding.UTF8, responseconv: HttpWeb.ResponseConverters.GetStream);
                 if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;
@@ -281,7 +283,7 @@ namespace Std.Tweak.CredentialProviders
             try
             {
                 var target = CreateUrl(ProviderRequestTokenUrl, RequestMethod.POST, null);
-                var ret = Http.WebConnectDownloadString(new Uri(target), "POST", null);
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "POST", null);
                 if (ret.Exception != null)
                     throw ret.Exception;
                 if (!ret.Succeeded)
@@ -340,7 +342,7 @@ namespace Std.Tweak.CredentialProviders
             var target = CreateUrl(ProviderAccessTokenUrl, RequestMethod.GET, null, pin);
             try
             {
-                var ret = Http.WebConnectDownloadString(new Uri(target), "GET", null);
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "GET", null);
                 if (ret.Exception != null)
                     throw ret.Exception;
                 if (!ret.Succeeded)
@@ -559,7 +561,7 @@ namespace Std.Tweak.CredentialProviders
         private string GetNonce()
         {
             //Use guid
-            return new Guid().ToString("N");
+            return Guid.NewGuid().ToString("N");
         }
 
         private string GetTimestamp()

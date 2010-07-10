@@ -9,6 +9,7 @@ using System.Text;
 namespace Std.Network
 {
     //Singleton Instance
+    [Obsolete("Use HttpWeb class.")]
     public static class Http
     {
         /// <summary>

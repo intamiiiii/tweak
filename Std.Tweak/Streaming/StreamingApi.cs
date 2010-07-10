@@ -86,62 +86,66 @@ namespace Std.Tweak.Streaming
         /// <param name="follow">following user's id</param>
         /// <param name="track">tracking keywords</param>
         /// <param name="locations">location area of tweet</param>
-        public static bool BeginStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents , int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
+        public static bool BeginStreaming(this CredentialProvider provider, StreamingType type, DataObserveMode observeMode = DataObserveMode.CallbackEvents, int? delimitered = null, int? count = null, string follow = null, string track = null, string locations = null)
         {
             if (streamThread != null)
                 throw new InvalidOperationException("Thread is now working. Stop old thread before start new.");
 
+            CredentialProvider.RequestMethod reqmethod = CredentialProvider.RequestMethod.GET;
             // argument check
             switch (type)
             {
                 case StreamingType.firehose:
-                    if (follow != null || track != null || locations != null)
+                    if (!String.IsNullOrWhiteSpace(follow) || !String.IsNullOrWhiteSpace(track) || !String.IsNullOrWhiteSpace(locations))
                         throw new ArgumentException("Invalid argument is setted.");
                     break;
                 case StreamingType.gardenhose:
-                    if (count != null && follow != null || track != null || locations != null)
+                    if (count != null && !String.IsNullOrWhiteSpace(follow) || !String.IsNullOrWhiteSpace(track) || !String.IsNullOrWhiteSpace(locations))
                         throw new ArgumentException("Invalid argument is setted.");
                     break;
                 case StreamingType.sample:
-                    if (count != null && follow != null || track != null || locations != null)
+                    if (count != null && !String.IsNullOrWhiteSpace(follow) || !String.IsNullOrWhiteSpace(track) || !String.IsNullOrWhiteSpace(locations))
                         throw new ArgumentException("Invalid argument is setted.");
                     break;
                 case StreamingType.birddog:
-                    if (track != null || locations != null)
+                    if (!String.IsNullOrWhiteSpace(track) || !String.IsNullOrWhiteSpace(locations))
                         throw new ArgumentException("Invalid argument is setted.");
+                    reqmethod = CredentialProvider.RequestMethod.POST;
                     break;
                 case StreamingType.shadow:
-                    if (track != null || locations != null)
+                    if (!String.IsNullOrWhiteSpace(track) || !String.IsNullOrWhiteSpace(locations))
                         throw new ArgumentException("Invalid argument is setted.");
+                    reqmethod = CredentialProvider.RequestMethod.POST;
                     break;
                 case StreamingType.filter:
-                    if (track == null && follow == null)
+                    if (String.IsNullOrWhiteSpace(track) && String.IsNullOrWhiteSpace(follow))
                         throw new ArgumentException("You must set follow or track argument.");
+                    reqmethod = CredentialProvider.RequestMethod.POST;
                     break;
             }
 
-            List<KeyValuePair<string,string>> args = new List<KeyValuePair<string,string>>();
-            if(delimitered != null)
-                args.Add(new KeyValuePair<string,string>("delimitered", delimitered.Value.ToString()));
+            List<KeyValuePair<string, string>> args = new List<KeyValuePair<string, string>>();
+            if (delimitered != null)
+                args.Add(new KeyValuePair<string, string>("delimitered", delimitered.Value.ToString()));
             if (count != null)
                 args.Add(new KeyValuePair<string, string>("count", count.Value.ToString()));
-            if(follow != null)
-                args.Add(new KeyValuePair<string,string>("follow", follow));
-            if(track != null)
-                args.Add(new KeyValuePair<string,string>("track", track));
-            if (locations != null)
+            if (!String.IsNullOrWhiteSpace(follow))
+                args.Add(new KeyValuePair<string, string>("follow", follow));
+            if (!String.IsNullOrWhiteSpace(track))
+                args.Add(new KeyValuePair<string, string>("track", track));
+            if (!String.IsNullOrWhiteSpace(locations))
                 args.Add(new KeyValuePair<string, string>("locations", locations));
 
             // clear receiving queue
             recvQueue.Clear();
-            
+
             if (observeMode == DataObserveMode.CallbackEvents)
             {
                 queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
                 queueTreatingThread.Start();
             }
             System.Diagnostics.Debug.WriteLine("URL:" + GetStreamingUri(type) + ", arg:" + args.ToString());
-            var strm = provider.RequestStreamingAPI(GetStreamingUri(type), CredentialProvider.RequestMethod.POST, args);
+            var strm = provider.RequestStreamingAPI(GetStreamingUri(type), reqmethod, args);
             if (strm != null)
             {
                 streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));

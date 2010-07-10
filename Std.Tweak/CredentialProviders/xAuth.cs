@@ -45,7 +45,7 @@ namespace Std.Tweak.CredentialProviders
             var target = CreateUrl(xAuthProviderAccessTokenUrl, RequestMethod.POST, para);
             try
             {
-                var ret = Http.WebConnectDownloadString(new Uri(target), "POST", null);
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "POST", null);
                 if (ret.Exception != null)
                     throw ret.Exception;
                 if (!ret.Succeeded)
