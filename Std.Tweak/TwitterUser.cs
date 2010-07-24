@@ -281,6 +281,19 @@ namespace Std.Tweak
         {
             return "@" + ScreenName + "(" + Name + ")";
         }
+
+        public override bool Equals(object obj)
+        {
+            var usr = obj as TwitterUser;
+            if (usr == null)
+                return false;
+            return usr.Id == this.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)this.Id;
+        }
     }
 
 }

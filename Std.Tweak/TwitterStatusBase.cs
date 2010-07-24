@@ -75,5 +75,18 @@ namespace Std.Tweak
         {
             return String.Format("{0}:{1}", User.ToString(), Text);
         }
+
+        public override bool Equals(object obj)
+        {
+            var status = obj as TwitterStatusBase;
+            if (status == null)
+                return false;
+            return status.Id == this.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)this.Id;
+        }
     }
 }

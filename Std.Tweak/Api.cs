@@ -423,7 +423,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterUser> GetFriendsAll(this CredentialProvider provider, string userId)
+        public static IEnumerable<TwitterUser> GetFriendsAll(this CredentialProvider provider, string userId = null)
         {
             return provider.GetUsersAll("statuses/friends.xml", userId, null);
         }
@@ -453,7 +453,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterUser> GetFollowersAll(this CredentialProvider provider, string userId)
+        public static IEnumerable<TwitterUser> GetFollowersAll(this CredentialProvider provider, string userId = null)
         {
             return provider.GetUsersAll("statuses/followers.xml", userId, null);
         }
@@ -545,7 +545,7 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser CreateFriendship(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser DestroyFriendship(this CredentialProvider provider, string userId = null, string screenName = null)
         {
             if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");

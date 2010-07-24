@@ -90,6 +90,7 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
             }
+
             var authuri = CreateUrl(target, method, param);
             try
             {
