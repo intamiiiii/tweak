@@ -99,7 +99,7 @@ namespace Std.Tweak
             {
                 using (var s = res.GetResponseStream())
                 {
-                    xDoc = XDocument.Load(XmlReader.Create(s));
+                    xDoc = XDocument.Load(converter(s));
                 }
             }
             catch (XmlException xe)
