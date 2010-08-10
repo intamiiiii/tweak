@@ -14,7 +14,7 @@ namespace Std.Network
     /// </summary>
     public static class HttpWeb
     {
-        static string userAgentString = "Std/HttpLib 2.0";
+        static string userAgentString = "Std/HttpLib 2.0(.net framework 4.0)";
 
         /// <summary>
         /// User agent string
@@ -87,6 +87,9 @@ namespace Std.Network
         /// </summary>
         public static class ResponseConverters
         {
+            /// <summary>
+            /// Get raw stream
+            /// </summary>
             public static Stream GetStream(HttpWebResponse res)
             {
                 return res.GetResponseStream();
@@ -263,6 +266,7 @@ namespace Std.Network
                             rs.Write(i, 0, i.Length);
                         }
                     }
+                    rs.Flush();
                 }
                 return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
             }
@@ -280,6 +284,36 @@ namespace Std.Network
             }
         }
 
+        public static OperationResult<T> WebSimplePost<T>(
+            HttpWebRequest req,
+            byte[] sendbytes,
+            StreamConverter<T> streamconv = null,
+            ResponseConverter<T> responseconv = null)
+        {
+            try
+            {
+                req.Method = "POST";
+                req.ContentLength = sendbytes.Length;
+                using (var rs = req.GetRequestStream())
+                {
+                    rs.Write(sendbytes, 0, sendbytes.Length);
+                    rs.Flush();
+                }
+                return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
+            }
+            catch (SocketException e)
+            {
+                return new OperationResult<T>(req.RequestUri, e);
+            }
+            catch (IOException e)
+            {
+                return new OperationResult<T>(req.RequestUri, e);
+            }
+            catch (WebException e)
+            {
+                return new OperationResult<T>(req.RequestUri, e);
+            }
+        }
 
         /// <summary>
         /// Parse web response

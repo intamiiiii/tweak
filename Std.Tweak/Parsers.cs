@@ -7,7 +7,6 @@ namespace Std.Tweak
     /// <summary>
     /// XML node parsers
     /// </summary>
-    /// X/O Mapping?w
     internal static class Parsers
     {
         internal static string ParseString(this XElement e)

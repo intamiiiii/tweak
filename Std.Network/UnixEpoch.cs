@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Std.Network
 {
+    /// <summary>
+    /// Unix epoch service
+    /// </summary>
     static public class UnixEpoch
     {
         const long EPOCH = 621355968000000000;

@@ -76,6 +76,9 @@ namespace Std.Tweak
             return String.Format("{0}:{1}", User.ToString(), Text);
         }
 
+        /// <summary>
+        /// Check equalness with Id
+        /// </summary>
         public override bool Equals(object obj)
         {
             var status = obj as TwitterStatusBase;
@@ -84,6 +87,9 @@ namespace Std.Tweak
             return status.Id == this.Id;
         }
 
+        /// <summary>
+        /// Equals Id property
+        /// </summary>
         public override int GetHashCode()
         {
             return (int)this.Id;

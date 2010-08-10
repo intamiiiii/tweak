@@ -6,7 +6,7 @@ using System.Threading;
 using System.IO;
 using System.Xml.Linq;
 using System.Runtime.Serialization.Json;
-
+using Std.Network.Xml;
 
 namespace Std.Tweak.Streaming
 {
@@ -139,17 +139,19 @@ namespace Std.Tweak.Streaming
             // clear receiving queue
             recvQueue.Clear();
 
-            if (observeMode == DataObserveMode.CallbackEvents)
-            {
-                queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
-                queueTreatingThread.Start();
-            }
             System.Diagnostics.Debug.WriteLine("URL:" + GetStreamingUri(type) + ", arg:" + args.ToString());
+
             var strm = provider.RequestStreamingAPI(GetStreamingUri(type), reqmethod, args);
             if (strm != null)
             {
                 streamThread = new Thread(new ParameterizedThreadStart(StreamingThread));
                 streamThread.Start(strm);
+
+                if (observeMode == DataObserveMode.CallbackEvents)
+                {
+                    queueTreatingThread = new Thread(new ThreadStart(QueueDequeueThread));
+                    queueTreatingThread.Start();
+                }
                 return true;
             }
             else
@@ -183,6 +185,9 @@ namespace Std.Tweak.Streaming
 
         #endregion
 
+        /// <summary>
+        /// Streaming main thread
+        /// </summary>
         private static void StreamingThread(object streamarg)
         {
             
@@ -437,7 +442,7 @@ namespace Std.Tweak.Streaming
                 case StreamingType.filter:
                     return String.Format(SapiV1, type.ToString());
                 case StreamingType.chirp:
-                    return "http://chirpstream.twitter.com/2b/user.json";
+                    return "http://betastream.twitter.com/2b/user.json";
                 default:
                     throw new ArgumentOutOfRangeException("Invalid enum value");
             }

@@ -7,6 +7,8 @@ using System.Net;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using Std.Network.Xml;
+
 
 namespace Std.Tweak
 {

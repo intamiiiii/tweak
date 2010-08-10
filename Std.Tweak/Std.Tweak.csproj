@@ -62,7 +62,6 @@
     <Compile Include="CredentialProviders\OAuth.cs" />
     <Compile Include="CredentialProviders\xAuth.cs" />
     <Compile Include="Exceptions.cs" />
-    <Compile Include="Parsers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchApi.cs" />
     <Compile Include="Streaming\StreamingApi.cs" />
@@ -80,7 +79,6 @@
       <Name>Std.Network</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -59,6 +59,7 @@ namespace Std.Network
         /// <summary>
         /// Succeeded result
         /// </summary>
+        /// <param name="statusCode">http status-code</param>
         /// <param name="target">target</param>
         /// <param name="data">return data</param>
         /// <param name="message">message</param>
@@ -78,6 +79,7 @@ namespace Std.Network
         /// </summary>
         /// <param name="target">target uri</param>
         /// <param name="thrown">thrown exception</param>
+        /// <param name="statusCode">http status-code</param>
         /// <param name="message">returning message</param>
         public OperationResult(Uri target, Exception thrown, HttpStatusCode statusCode = 0, string message = null)
             : this(target, false,  statusCode, default(T), message, thrown) { }

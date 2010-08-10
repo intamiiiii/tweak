@@ -8,7 +8,9 @@ using System.Text;
 
 namespace Std.Network
 {
-    //Singleton Instance
+    /// <summary>
+    /// Http web service (OLD, USE HttpWeb class INSTEAD.)
+    /// </summary>
     [Obsolete("Use HttpWeb class.")]
     public static class Http
     {
@@ -102,6 +104,9 @@ namespace Std.Network
         /// </summary>
         public delegate T DStreamCallbackFull<out T>(WebResponse res);
 
+        /// <summary>
+        /// Connect to web
+        /// </summary>
         public static OperationResult<T> WebConnect<T>
             (HttpWebRequest req,
             string method,
@@ -312,7 +317,6 @@ namespace Std.Network
         /// Upload data for network with manual HTTPWebRequest and multipart/form-data.(this method always use "POST")
         /// </summary>
         /// <param name="req">Using HttpWebRequest</param>
-        /// <param name="credential">Using credential information</param>
         /// <param name="callback">Stream callback</param>
         /// <param name="senddata">Sending data</param>
         /// <param name="encode">Using encode</param>
@@ -329,7 +333,6 @@ namespace Std.Network
         /// Upload data for network with manual HTTPWebRequest and multipart/form-data.(this method always use "POST")
         /// </summary>
         /// <param name="req">Using HttpWebRequest</param>
-        /// <param name="credential">Using credential information</param>
         /// <param name="callback">Stream callback</param>
         /// <param name="senddata">Sending data</param>
         /// <param name="encode">Using encode</param>

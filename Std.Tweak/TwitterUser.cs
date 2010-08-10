@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Drawing;
+using Std.Network.Xml;
 
 namespace Std.Tweak
 {
@@ -282,6 +283,9 @@ namespace Std.Tweak
             return "@" + ScreenName + "(" + Name + ")";
         }
 
+        /// <summary>
+        /// Check equalness with Id
+        /// </summary>
         public override bool Equals(object obj)
         {
             var usr = obj as TwitterUser;
@@ -290,6 +294,9 @@ namespace Std.Tweak
             return usr.Id == this.Id;
         }
 
+        /// <summary>
+        /// Equals Id property.
+        /// </summary>
         public override int GetHashCode()
         {
             return (int)this.Id;
