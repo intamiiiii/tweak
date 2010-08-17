@@ -1063,5 +1063,14 @@ namespace Std.Tweak
 
         #endregion
 
+        #region Help method
+
+        public static bool Test(this CredentialProvider provider)
+        {
+            var doc = provider.RequestAPIv1("help/test.xml", CredentialProvider.RequestMethod.GET, null);
+            return doc.Element("ok").ParseBool();
+        }
+
+        #endregion
     }
 }

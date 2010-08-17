@@ -17,7 +17,7 @@ namespace Std.Tweak.CredentialProviders
     /// <remarks>
     /// We STRONGLY recommended to use OAuth (or XAuth) alternate this.
     /// </remarks>
-    [Obsolete("Basic authentication will unable by 2010/8/31.")]
+    [Obsolete("Basic authentication will be disabled by 2010/8/31.")]
     public class Basic : CredentialProvider
     {
         /// <summary>

@@ -9,7 +9,7 @@ using System.IO;
 namespace Std.Tweak
 {
     /// <summary>
-    /// Provides credential information for accessing Twitter.
+    /// Provides credential information for access to Twitter.
     /// </summary>
     public abstract class CredentialProvider
     {

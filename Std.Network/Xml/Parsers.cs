@@ -28,15 +28,17 @@ namespace Std.Network.Xml
 
         public static DateTime ParseDateTime(this string s)
         {
-            return DateTime.Parse(s);
+            DateTime dt;
+            return DateTime.TryParse(s, out dt) ? dt : DateTime.MinValue;
         }
 
         public static DateTime ParseDateTime(this string s, string format)
         {
-            return DateTime.ParseExact(s,
+            DateTime dt;
+            return DateTime.TryParseExact(s,
                 format,
                 System.Globalization.DateTimeFormatInfo.InvariantInfo,
-                System.Globalization.DateTimeStyles.None);
+                System.Globalization.DateTimeStyles.None, out dt) ? dt : DateTime.MinValue;
         }
 
         public static DateTime ParseUnixTime(this string s)

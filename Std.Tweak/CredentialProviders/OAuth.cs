@@ -170,15 +170,14 @@ namespace Std.Tweak.CredentialProviders
                 throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
             }
 
-            method = RequestMethod.GET;
-            var authuri = method == RequestMethod.GET ? CreateUrl(target, method, param) : CreateUrl(target, method, null);
+            var authuri = CreateUrl(target, method, param);
             try
             {
                 var req = HttpWeb.CreateRequest(new Uri(authuri), method.ToString());
-                var ret =
-                    method == RequestMethod.GET ?
-                    HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream) :
-                    HttpWeb.WebFormSendString<Stream>(req, param, Encoding.UTF8, responseconv: HttpWeb.ResponseConverters.GetStream);
+                // timeout is 5 seconds
+
+                req.Timeout = 5000;
+                var ret = HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream);
                 if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;

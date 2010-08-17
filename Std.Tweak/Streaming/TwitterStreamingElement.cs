@@ -20,6 +20,29 @@ namespace Std.Tweak.Streaming
             return new TwitterStreamingElement(node);
         }
 
+        public TwitterStreamingElement(TwitterStatus tstatus)
+        {
+            if (tstatus.Kind == TwitterStatusBase.StatusKind.Retweeted && tstatus.RetweetedOriginal != null)
+            {
+                this.Kind = ElementKind.Retweet;
+                this.Status = tstatus.RetweetedOriginal;
+                this.SourceUser = tstatus.RetweetedOriginal.User;
+                this.TargetUser = tstatus.User;
+            }
+            else
+            {
+                this.Kind = ElementKind.Status;
+                this.Status = tstatus;
+                this.SourceUser = tstatus.User;
+            }
+        }
+
+        public TwitterStreamingElement(TwitterDirectMessage dmsg)
+        {
+            this.Kind = ElementKind.DirectMessage;
+            this.Status = dmsg;
+        }
+
         /// <summary>
         /// constructor
         /// </summary>
@@ -40,6 +63,11 @@ namespace Std.Tweak.Streaming
                 {
                     // status
                     ParseStatus(node);
+                }
+                else if (node.Element("direct_message") != null)
+                {
+                    // direct message
+                    ParseDirectMessage(node);
                 }
                 else if (node.Element("friends") != null)
                 {
@@ -102,6 +130,12 @@ namespace Std.Tweak.Streaming
             Status = TwitterStatus.CreateByNode(node);
         }
 
+        private void ParseDirectMessage(XElement node)
+        {
+            Kind = ElementKind.DirectMessage;
+            Status = TwitterDirectMessage.CreateByNode(node.Element("direct_message"));
+        }
+        
         private void ParseUserEnumerations(XElement node)
         {
             Kind = ElementKind.UserEnumerations;
@@ -132,7 +166,6 @@ namespace Std.Tweak.Streaming
             ParseSourceDest(node);
             ParseTargetStatus(node);
         }
-
 
         private void ParseRetweet(XElement node)
         {
@@ -210,6 +243,10 @@ namespace Std.Tweak.Streaming
             /// </summary>
             Retweet,
             /// <summary>
+            /// Direct message
+            /// </summary>
+            DirectMessage,
+            /// <summary>
             /// List member added
             /// </summary>
             ListMemberAdded,
@@ -237,8 +274,8 @@ namespace Std.Tweak.Streaming
         /// <summary>
         /// Status instance
         /// </summary>
-        public TwitterStatus Status { get; private set; }
-
+        public TwitterStatusBase Status { get; private set; }
+        
         /// <summary>
         /// User enumerations
         /// </summary>

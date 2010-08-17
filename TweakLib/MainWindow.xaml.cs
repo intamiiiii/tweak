@@ -52,7 +52,7 @@ namespace TweakLib
                 switch (i.Kind)
                 {
                     case TwitterStreamingElement.ElementKind.Status:
-                        this.Dispatcher.Invoke(new Action(() => status.Insert(0, i.Status)));
+                        this.Dispatcher.Invoke(new Action(() => status.Insert(0, (TwitterStatus)i.Status)));
                         System.Diagnostics.Debug.WriteLine(i.Status.ToString());
                         break;
                     case TwitterStreamingElement.ElementKind.Delete:
@@ -78,6 +78,10 @@ namespace TweakLib
                         System.Diagnostics.Debug.WriteLine("▼Retweet " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text);
                         break;
                     case TwitterStreamingElement.ElementKind.UserEnumerations:
+                        break;
+                    case TwitterStreamingElement.ElementKind.DirectMessage:
+                        var dm = (TwitterDirectMessage)i.Status;
+                        MessageBox.Show("Direct message from " + dm.Sender.ScreenName + Environment.NewLine + dm.Text);
                         break;
                     case TwitterStreamingElement.ElementKind.Undefined:
                         this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "★Undefined event:" + i.RawXElement)));

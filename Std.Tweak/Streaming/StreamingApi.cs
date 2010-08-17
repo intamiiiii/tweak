@@ -13,6 +13,7 @@ namespace Std.Tweak.Streaming
     /// <summary>
     /// Streaming API provider
     /// </summary>
+    [Obsolete("We suggest you to use StreamingController class alternately.")]
     public static class StreamingApi
     {
         /// <summary>
@@ -424,7 +425,12 @@ namespace Std.Tweak.Streaming
             /// <summary>
             /// Beta
             /// </summary>
-            chirp
+            [Obsolete("use \"user\" altenately.")]
+            chirp,
+            /// <summary>
+            /// User streaming (2b)
+            /// </summary>
+            user
         }
 
         const string SapiV1 = "http://stream.twitter.com/1/statuses/{0}.json";
@@ -442,6 +448,7 @@ namespace Std.Tweak.Streaming
                 case StreamingType.filter:
                     return String.Format(SapiV1, type.ToString());
                 case StreamingType.chirp:
+                case StreamingType.user:
                     return "http://betastream.twitter.com/2b/user.json";
                 default:
                     throw new ArgumentOutOfRangeException("Invalid enum value");
