@@ -142,5 +142,26 @@ namespace Std.Tweak
         {
             return this.FullName;
         }
+
+        /// <summary>
+        /// Compare by ID.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            var list = obj as TwitterList;
+            if (list == null)
+                return false;
+            else
+                return list.Id == this.Id;
+        }
+
+        /// <summary>
+        /// Equals id of myself
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return (int)this.Id;
+        }
     }
 }

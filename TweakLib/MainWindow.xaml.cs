@@ -45,20 +45,29 @@ namespace TweakLib
         public void ReceiveThread()
         {
             b = new Basic(id, pw);
-            StreamingApi.OnDisconnected += new Action(StreamingApi_OnDisconnected);
-            b.BeginStreaming(StreamingApi.StreamingType.chirp, StreamingApi.DataObserveMode.EnumerateXmlOrElement);
-            foreach (var i in b.EnumerateStreaming().AsParallel())
+            var sctl = StreamingController.BeginStreaming(b, StreamingController.StreamingType.user);
+            sctl.OnDisconnected += new Action(StreamingApi_OnDisconnected);
+            foreach (var i in sctl.EnumerateStreaming())
             {
                 switch (i.Kind)
                 {
                     case TwitterStreamingElement.ElementKind.Status:
-                        this.Dispatcher.Invoke(new Action(() => status.Insert(0, (TwitterStatus)i.Status)));
+                        if (((TwitterStatus)i.Status).IsOfficialRetweeted)
+                        {
+                            this.Dispatcher.Invoke(new Action(() => status.Insert(0, ((TwitterStatus)i.Status))));
+                            this.Dispatcher.Invoke(new Action(() => status.Insert(0, ((TwitterStatus)i.Status).RetweetedOriginal)));
+                        }
+                        else
+                        {
+                            this.Dispatcher.Invoke(new Action(() => status.Insert(0, (TwitterStatus)i.Status)));
+                        }
                         System.Diagnostics.Debug.WriteLine(i.Status.ToString());
                         break;
                     case TwitterStreamingElement.ElementKind.Delete:
+                        System.Diagnostics.Debug.WriteLine("×Deleted " + i.RawXElement);
                         break;
                     case TwitterStreamingElement.ElementKind.Favorite:
-                        this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "Fav " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text )));
+                        this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "Fav " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text)));
                         System.Diagnostics.Debug.WriteLine("●Fav " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text);
                         break;
                     case TwitterStreamingElement.ElementKind.Unfavorite:
@@ -69,13 +78,9 @@ namespace TweakLib
                         this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "Follow " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString())));
                         System.Diagnostics.Debug.WriteLine("★Follow " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString());
                         break;
-                    case TwitterStreamingElement.ElementKind.ListMemberAdded:
+                    case TwitterStreamingElement.ElementKind.ListUpdated:
                         this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "AddList " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + " to " + i.TargetList.ToString())));
                         System.Diagnostics.Debug.WriteLine("▲AddList " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + " to " + i.TargetList.ToString());
-                        break;
-                    case TwitterStreamingElement.ElementKind.Retweet:
-                        this.Dispatcher.Invoke(new Action(() => activities.Insert(0, "Retweet " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text)));
-                        System.Diagnostics.Debug.WriteLine("▼Retweet " + i.SourceUser.ToString() + " => " + i.TargetUser.ToString() + ": " + i.Status.Text);
                         break;
                     case TwitterStreamingElement.ElementKind.UserEnumerations:
                         break;

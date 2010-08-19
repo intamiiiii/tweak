@@ -57,6 +57,8 @@ namespace Std.Tweak
 
             this.Favorited = node.Element("favorited").ParseBool();
 
+            this.Retweeted = node.Element("retweeted").ParseBool();
+
             this.CreatedAt = node.Element("created_at").ParseDateTime("ddd MMM d HH':'mm':'ss zzz yyyy");
 
             this.InReplyToStatusId = node.Element("in_reply_to_status_id").ParseLong();
@@ -89,6 +91,11 @@ namespace Std.Tweak
         public bool Favorited { get; set; }
 
         /// <summary>
+        /// Retweeted this
+        /// </summary>
+        public bool Retweeted { get; set; }
+
+        /// <summary>
         /// Source param
         /// </summary>
         public string Source { get; set; }
@@ -112,5 +119,13 @@ namespace Std.Tweak
         /// Original status in this if this tweet is official-retweet some tweet.
         /// </summary>
         public TwitterStatus RetweetedOriginal { get; set; }
+
+        /// <summary>
+        /// Check official retweeted tweet
+        /// </summary>
+        public bool IsOfficialRetweeted
+        {
+            get { return RetweetedOriginal != null; }
+        }
     }
 }

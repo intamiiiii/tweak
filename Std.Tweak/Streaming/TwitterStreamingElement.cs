@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using Std.Network.Xml;
 
@@ -22,19 +21,9 @@ namespace Std.Tweak.Streaming
 
         public TwitterStreamingElement(TwitterStatus tstatus)
         {
-            if (tstatus.Kind == TwitterStatusBase.StatusKind.Retweeted && tstatus.RetweetedOriginal != null)
-            {
-                this.Kind = ElementKind.Retweet;
-                this.Status = tstatus.RetweetedOriginal;
-                this.SourceUser = tstatus.RetweetedOriginal.User;
-                this.TargetUser = tstatus.User;
-            }
-            else
-            {
-                this.Kind = ElementKind.Status;
-                this.Status = tstatus;
-                this.SourceUser = tstatus.User;
-            }
+            this.Kind = ElementKind.Status;
+            this.Status = tstatus;
+            this.SourceUser = tstatus.User;
         }
 
         public TwitterStreamingElement(TwitterDirectMessage dmsg)
@@ -87,22 +76,55 @@ namespace Std.Tweak.Streaming
                 {
                     case "follow":
                         // follow
-                        ParseFollow(node);
+                        ParseFollowChanged(node, true);
+                        break;
+                    case "unfollow":
+                    case "remove":
+                        // unfollow(remove)
+                        // currently unsupported
+                        ParseFollowChanged(node, false);
                         break;
                     case "favorite":
                         // favorite
-                        ParseFavorite(node);
+                        ParseFavoriteChanged(node, true);
                         break;
                     case "unfavorite":
                         // unfavorite
-                        ParseUnfavorite(node);
+                        ParseFavoriteChanged(node, false);
                         break;
-                    case "retweet":
-                        ParseRetweet(node);
+                    case "list_user_subscribed":
+                        // list user subscribed
+                        ParseListSubscribeChanged(node, true);
+                        break;
+                    case "list_user_unsubscribed":
+                        // list user unsubscribed
+                        ParseListSubscribeChanged(node, false);
+                        break;
+                    case "list_created":
+                        // list created
+                        ParseListCreateChanged(node, true);
+                        break;
+                    case "list_destroyed":
+                        ParseListCreateChanged(node, false);
+                        break;
+                    case "list_updated":
+                        ParseListUpdated(node);
                         break;
                     case "list_member_added":
                         // list member added
-                        ParseListMemberAdded(node);
+                        ParseListMemberChanged(node, true);
+                        break;
+                    case "list_member_removed":
+                        // list member removed
+                        ParseListMemberChanged(node, false);
+                        break;
+                    case "block":
+                        // blocked
+                        ParseBlockChanged(node, true);
+                        break;
+                    case "unblock":
+                        // unblocked
+                        ParseBlockChanged(node, false);
                         break;
                     default:
                         ParseUndefined(node);
@@ -147,41 +169,54 @@ namespace Std.Tweak.Streaming
 
         #region Explicit switch
 
-        private void ParseFollow(XElement node)
+        private void ParseFollowChanged(XElement node, bool follow)
         {
-            Kind = ElementKind.Follow;
-            ParseSourceDest(node);
+            Kind = follow ? ElementKind.Follow : ElementKind.Unfollow;
+            ParseSourceTargetUsers(node);
         }
 
-        private void ParseFavorite(XElement node)
+        private void ParseFavoriteChanged(XElement node, bool created)
         {
-            Kind = ElementKind.Favorite;
-            ParseSourceDest(node);
+            Kind = created ? ElementKind.Favorite : ElementKind.Unfavorite;
+            ParseSourceTargetUsers(node);
             ParseTargetStatus(node);
         }
 
-        private void ParseUnfavorite(XElement node)
+        private void ParseListSubscribeChanged(XElement node, bool subscribed)
         {
-            Kind = ElementKind.Unfavorite;
-            ParseSourceDest(node);
-            ParseTargetStatus(node);
-        }
-
-        private void ParseRetweet(XElement node)
-        {
-            Kind = ElementKind.Retweet;
-            ParseSourceDest(node);
-            ParseTargetStatus(node);
-        }
-
-        private void ParseListMemberAdded(XElement node)
-        {
-            Kind = ElementKind.ListMemberAdded;
-            ParseSourceDest(node);
+            Kind = subscribed ? ElementKind.ListSubscribed : ElementKind.ListUnsubscribed;
+            ParseSourceTargetUsers(node);
             ParseTargetList(node);
         }
 
-        private void ParseSourceDest(XElement node)
+        private void ParseListUpdated(XElement node)
+        {
+            Kind = ElementKind.ListUpdated;
+            ParseSourceTargetUsers(node);
+            ParseTargetList(node);
+        }
+
+        private void ParseListCreateChanged(XElement node, bool created)
+        {
+            Kind = created ? ElementKind.ListCreated : ElementKind.ListDeleted;
+            ParseSourceTargetUsers(node);
+            ParseTargetList(node);
+        }
+
+        private void ParseListMemberChanged(XElement node, bool added)
+        {
+            Kind = added ? ElementKind.ListMemberAdded : ElementKind.ListMemberRemoved;
+            ParseSourceTargetUsers(node);
+            ParseTargetList(node);
+        }
+
+        private void ParseBlockChanged(XElement node, bool blocked)
+        {
+            Kind = blocked ? ElementKind.Blocked : ElementKind.Unblocked;
+            ParseSourceTargetUsers(node);
+        }
+
+        private void ParseSourceTargetUsers(XElement node)
         {
             var source = node.Element("source");
             var target = node.Element("target");
@@ -231,6 +266,10 @@ namespace Std.Tweak.Streaming
             /// </summary>
             Follow,
             /// <summary>
+            /// Unfollow (remove) [CURRENTLY DISABLED]
+            /// </summary>
+            Unfollow,
+            /// <summary>
             /// Favorite
             /// </summary>
             Favorite,
@@ -239,17 +278,45 @@ namespace Std.Tweak.Streaming
             /// </summary>
             Unfavorite,
             /// <summary>
-            /// Retweet
-            /// </summary>
-            Retweet,
-            /// <summary>
             /// Direct message
             /// </summary>
             DirectMessage,
             /// <summary>
+            /// List created
+            /// </summary>
+            ListCreated,
+            /// <summary>
+            /// List deleted
+            /// </summary>
+            ListDeleted,
+            /// <summary>
+            /// List information updated
+            /// </summary>
+            ListUpdated,
+            /// <summary>
+            /// Added list subscription
+            /// </summary>
+            ListSubscribed,
+            /// <summary>
+            /// Deleted list subscription
+            /// </summary>
+            ListUnsubscribed,
+            /// <summary>
             /// List member added
             /// </summary>
             ListMemberAdded,
+            /// <summary>
+            /// List member removed
+            /// </summary>
+            ListMemberRemoved,
+            /// <summary>
+            /// User blocked
+            /// </summary>
+            Blocked,
+            /// <summary>
+            /// User unblocked
+            /// </summary>
+            Unblocked,
             /// <summary>
             /// Undefined
             /// </summary>

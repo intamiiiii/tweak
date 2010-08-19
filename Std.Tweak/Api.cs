@@ -130,6 +130,28 @@ namespace Std.Tweak
             return provider.GetTimeline("statuses/mentions.xml", sinceId, maxId, count, page, null, null);
         }
 
+        /// <summary>
+        /// Get favorite timeline
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="page">page of receiving timeline</param>
+        public static IEnumerable<TwitterStatus> GetFavorites(this CredentialProvider provider)
+        {
+            return provider.GetTimeline("favorites.xml", null, null, null, null, null, null);
+        }
+
+        /// <summary>
+        /// Get favorite timeline with full params
+        /// </summary>
+        public static IEnumerable<TwitterStatus> GetFavorites(this CredentialProvider provider, string id = null, long? page = null)
+        {
+            if (id == null)
+                return provider.GetTimeline("favorites.xml", null, null, null, page, null, null);
+            else
+                return provider.GetTimeline("favorites/" + id + ".xml", null, null, null, page, null, null);
+        }
+
+
         #endregion
 
         #region Status methods
@@ -363,7 +385,7 @@ namespace Std.Tweak
             nextCursor = 0;
             var doc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.GET, para);
             if (doc == null)
-                return null;
+                return null; // request returns error ?
             List<TwitterUser> users = new List<TwitterUser>();
             var ul = doc.Element("users_list");
             if (ul != null)
@@ -508,7 +530,7 @@ namespace Std.Tweak
         /// </remarks>
         public static TwitterUser CreateFriendship(this CredentialProvider provider, string userId = null, string screenName = null, bool follow = false)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty( screenName))
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
             if (!String.IsNullOrEmpty(userId))
@@ -609,6 +631,212 @@ namespace Std.Tweak
             var ret = provider.RequestAPIv1("friendships/show.xml", CredentialProvider.RequestMethod.GET, args).Element("relationship");
             if (ret != null)
                 return TwitterRelation.CreateByNode(ret);
+            else
+                return null;
+        }
+
+        #endregion
+
+        #region Block and spam methods
+
+        /// <summary>
+        /// Create block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser CreateBlockUser(this CredentialProvider provider, string user)
+        {
+            var ret = provider.RequestAPIv1("blocks/create/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Create block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">block user id</param>
+        /// <param name="screenName">block user screen name</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser CreateBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            var ret = provider.RequestAPIv1("blocks/create.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Destroy block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser DestroyBlockUser(this CredentialProvider provider, string user)
+        {
+            var ret = provider.RequestAPIv1("blocks/destroy/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Destroy block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">block user id</param>
+        /// <param name="screenName">block user screen name</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser DestroyBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            var ret = provider.RequestAPIv1("blocks/destroy.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Check blocking someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser ExistsBlockUser(this CredentialProvider provider, string user)
+        {
+            var ret = provider.RequestAPIv1("blocks/exists/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Check blocking someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">block user id</param>
+        /// <param name="screenName">block user screen name</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser ExistsBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            var ret = provider.RequestAPIv1("blocks/exists.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Get blocking user's list
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="page">page of blocking list(1-)</param>
+        public static IEnumerable<TwitterUser> GetBlockingUsers(this CredentialProvider provider, int? page = null)
+        {
+            List<KeyValuePair<string, string>> arg = null;
+            if (page != null)
+            {
+                arg = new List<KeyValuePair<string, string>>();
+                arg.Add(new KeyValuePair<string, string>("page", page.Value.ToString()));
+            }
+            var ret = provider.RequestAPIv1("blocks.blocking.xml", CredentialProvider.RequestMethod.GET, arg);
+            if (ret != null)
+                return from n in ret.Descendants("user")
+                       let usr = TwitterUser.CreateByNode(n)
+                       where usr != null
+                       select usr;
+            else
+                return null;
+        }
+        
+        /// <summary>
+        /// Get blocking user's list (all)
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        public static IEnumerable<TwitterUser> GetBlockingUsersAll(this CredentialProvider provider)
+        {
+            int page = 1;
+            while(true)
+            {
+                var ret = GetBlockingUsers(provider, page);
+                if (ret == null)
+                    yield break;
+                foreach(var u in ret)
+                    yield return u;
+                if (ret.Count() < 20)
+                    yield break;
+                page++;
+            }
+        }
+
+        /// <summary>
+        /// Report spam and block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="user">target user id or screen name</param>
+        public static TwitterUser ReportSpam(this CredentialProvider provider, string user)
+        {
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(user))
+                arg.Add(new KeyValuePair<string, string>("id", user));
+            var ret = provider.RequestAPIv1("report_spam.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Report spam and block someone
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <param name="userId">block user id</param>
+        /// <param name="screenName">block user screen name</param>
+        /// <remarks>
+        /// user id or user screeen name must set.
+        /// </remarks>
+        public static TwitterUser ReportSpam(this CredentialProvider provider, string userId = null, string screenName = null)
+        {
+            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+                throw new ArgumentException("User id or screen name is must set.");
+            List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
+            if (!String.IsNullOrEmpty(userId))
+                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (!String.IsNullOrEmpty(screenName))
+                arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
+            var ret = provider.RequestAPIv1("blocks/create.xml", CredentialProvider.RequestMethod.POST, arg);
+            if (ret != null && ret.Element("user") != null)
+                return TwitterUser.CreateByNode(ret.Element("user"));
             else
                 return null;
         }

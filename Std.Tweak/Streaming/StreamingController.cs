@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
-using System.IO;
 using System.Xml.Linq;
-using System.Runtime.Serialization.Json;
-using Std.Network.Xml;
 
 
 namespace Std.Tweak.Streaming
@@ -165,7 +164,10 @@ namespace Std.Tweak.Streaming
             /// <summary>
             /// User streaming (preview)<para />
             /// Arguments:<para />
-            /// 
+            ///   count: backlog length<para/>
+            ///   delimited: data length(byte)<para/>
+            ///   track: tracking keyword(each keywords max 60 bytes, separated comma.)<para/>
+            ///   locations: location area of tweet<para/>
             /// </summary>
             user
         }
@@ -306,8 +308,6 @@ namespace Std.Tweak.Streaming
             GC.SuppressFinalize(this);
         }
 
-        #region IDisposable メンバー
-
         public void Dispose()
         {
             if (Disposed)
@@ -321,7 +321,5 @@ namespace Std.Tweak.Streaming
                 streamReceiver.Abort();
             streamReceiver = null;
         }
-
-        #endregion
     }
 }
