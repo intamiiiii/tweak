@@ -15,9 +15,10 @@ namespace Std.Tweak.CredentialProviders
     /// Basic credential
     /// </summary>
     /// <remarks>
-    /// We STRONGLY recommended to use OAuth (or XAuth) alternate this.
+    /// Twitter is no longer supported this authentication method.<para />
+    /// Please use OAuth(or xAuth) alternately. :)
     /// </remarks>
-    [Obsolete("Basic authentication will be disabled by 2010/8/31.")]
+    [Obsolete("Basic authentication is no longer supported in Twitter.")]
     public class Basic : CredentialProvider
     {
         /// <summary>

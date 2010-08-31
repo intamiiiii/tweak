@@ -93,13 +93,11 @@ namespace Std.Tweak
             if (long.TryParse(res.Headers["X-RateLimit-Reset"], out rateLimitReset))
                 RateLimitReset = UnixEpoch.GetDateTimeByUnixEpoch(rateLimitReset);
 
-            //Create xml document
-            XDocument xDoc = new XDocument();
             try
             {
                 using (var s = res.GetResponseStream())
                 {
-                    xDoc = XDocument.Load(converter(s));
+                    return XDocument.Load(converter(s));
                 }
             }
             catch (XmlException xe)
@@ -114,7 +112,6 @@ namespace Std.Tweak
             {
                 throw;
             }
-            return xDoc;
         }
     }
 }
