@@ -69,6 +69,11 @@ namespace Std.Tweak
         public virtual StatusKind Kind { get; set; }
 
         /// <summary>
+        /// Common object holder
+        /// </summary>
+        public object Tag { get; set; }
+
+        /// <summary>
         /// Show formatted status
         /// </summary>
         public override string ToString()

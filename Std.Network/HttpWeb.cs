@@ -256,7 +256,9 @@ namespace Std.Network
                 }
                 gross += endsep.Length;
 
+                System.Diagnostics.Debug.WriteLine("gross:" + gross.ToString());
                 req.ContentLength = gross;
+                gross = 0;
                 using (var rs = req.GetRequestStream())
                 {
                     foreach (var s in sends)
@@ -264,8 +266,11 @@ namespace Std.Network
                         foreach (var i in s.EnumerateByte(boundary, encode))
                         {
                             rs.Write(i, 0, i.Length);
+                            gross += i.Length;
+                            System.Diagnostics.Debug.WriteLine("Wrote:" + gross.ToString());
                         }
                     }
+                    rs.Write(endsep, 0, endsep.Length); // finalize
                     rs.Flush();
                 }
                 return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
@@ -284,6 +289,9 @@ namespace Std.Network
             }
         }
 
+        /// <summary>
+        /// Simply post a daata
+        /// </summary>
         public static OperationResult<T> WebSimplePost<T>(
             HttpWebRequest req,
             byte[] sendbytes,
@@ -471,13 +479,16 @@ namespace Std.Network
         /// <param name="name">field name</param>
         /// <param name="text">argument text</param>
         /// <param name="file">argument file</param>
-        public SendData(string name, string text = null, string file = null)
-            : this(name, text)
+        public SendData(string name, string text = null, string file = null) : this()
         {
             if (!(text == null ^ file == null))
                 throw new ArgumentException("Specified value is not setted or setted excess.");
 
-            this.FilePath = file;
+            this.Name = name;
+            if (text != null)
+                this.Text = text;
+            if (file != null)
+                this.FilePath = file;
         }
 
         private Encoding cacheenc;
@@ -518,20 +529,28 @@ namespace Std.Network
             UpdateCache(boundary, encode);
             if (text != null)
             {
+                System.Diagnostics.Debug.WriteLine("Returned:" + cache);
                 yield return cache;
             }
             else if (fpath != null)
             {
-                yield return cache;
+                yield return cache; // write boundary
+
+                long fsize = 0;
                 using (var fs = new FileStream(fpath, FileMode.Open, FileAccess.Read))
                 {
                     byte[] rdata = new byte[0x1000];
                     int rsize = 0;
                     for (; ; )
                     {
-                        rsize = fs.Read(rdata, 0, rsize);
-                        if (rsize <= 0) break;
-                        yield return rdata;
+                        rsize = fs.Read(rdata, 0, rdata.Length);
+                        fsize += rsize;
+                        if (rsize <= 0)
+                            break;
+                        if (rsize == rdata.Length)
+                            yield return rdata;
+                        else // slice
+                            yield return rdata.Take(rsize).ToArray();
                     }
                 }
             }
@@ -580,5 +599,4 @@ namespace Std.Network
             }
         }
     }
-
 }

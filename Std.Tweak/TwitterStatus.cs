@@ -86,12 +86,12 @@ namespace Std.Tweak
         public bool Truncated { get; set; }
 
         /// <summary>
-        /// Favorited this
+        /// Favorited this by authenticated user
         /// </summary>
         public bool Favorited { get; set; }
 
         /// <summary>
-        /// Retweeted this
+        /// Retweeted this by authenticated user
         /// </summary>
         public bool Retweeted { get; set; }
 
@@ -121,9 +121,9 @@ namespace Std.Tweak
         public TwitterStatus RetweetedOriginal { get; set; }
 
         /// <summary>
-        /// Check official retweeted tweet
+        /// Check published as retweet
         /// </summary>
-        public bool IsOfficialRetweeted
+        public bool PublishedByRetweet
         {
             get { return RetweetedOriginal != null; }
         }

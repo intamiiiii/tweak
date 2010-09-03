@@ -71,12 +71,14 @@ namespace Std.Tweak.CredentialProviders
         /// <returns>XML documents</returns>
         public sealed override XDocument RequestAPI(string uri, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string,string>> param)
         {
+            // validate arguments
             if (String.IsNullOrEmpty(uri))
                 throw new ArgumentNullException(uri);
             else if (uri.Length < 5)
                 throw new ArgumentException("uri is too short.");
             string target = uri;
 
+            // detection return type of api
             DocumentTypes docType = DocumentTypes.Invalid;
 
             if (target.EndsWith("xml"))
@@ -84,17 +86,19 @@ namespace Std.Tweak.CredentialProviders
             else if (target.EndsWith("json"))
                 docType = DocumentTypes.Json;
             else
-                throw new ArgumentException("format can't identify. uriPartial is must ends with xml or json.");
+                throw new ArgumentException("format can't identify. uriPartial is must ends with .xml or .json.");
 
+            // pre-validation authentication
             if(String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
             {
                 throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
             }
 
+            // generate OAuth uri
             var authuri = CreateUrl(target, method, param);
             try
             {
-                var ret= HttpWeb.WebConnect<XDocument>(
+                var ret = HttpWeb.WebConnect<XDocument>(
                     HttpWeb.CreateRequest(new Uri(authuri), method.ToString()),
                     responseconv: new HttpWeb.ResponseConverter<XDocument>((res) =>
                     {
@@ -202,6 +206,23 @@ namespace Std.Tweak.CredentialProviders
             }
         }
 
+        /// <summary>
+        /// Send query with OAuth credentials<para />
+        /// (Use for OAuth Echo)
+        /// </summary>
+        public void MakeOAuthEchoRequest(ref HttpWebRequest request, IEnumerable<KeyValuePair<string, string>> param = null, string providerUri = ProviderEchoAuthorizeUrl)
+        {
+            // pre-validation authentication
+            if (String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
+            {
+                throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
+            }
+
+            request.Headers["X-Auth-Service-Provider"] = providerUri;
+            var header = GetAuthorizationHeaderText(providerUri, RequestMethod.GET, param);
+            request.Headers["X-Verify-Credentials-Authorization"] = "OAuth realm=\"http://api.twitter.com/\"," + header;
+        }
+
         #region OAuth property
 
         /// <summary>
@@ -217,7 +238,7 @@ namespace Std.Tweak.CredentialProviders
         const string ProviderRequestTokenUrl = "http://twitter.com/oauth/request_token";
         const string ProviderAccessTokenUrl = "http://twitter.com/oauth/access_token";
         const string ProviderAuthorizeUrl = "http://twitter.com/oauth/authorize";
-
+        const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
 
         const OAuthSigType SignatureType = OAuthSigType.Hmac_Sha1;
 
@@ -376,17 +397,8 @@ namespace Std.Tweak.CredentialProviders
         /// <summary>
         /// Create request uri
         /// </summary>
-        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
         {
-            return CreateUrl(uri, method, param, null);
-        }
-
-        /// <summary>
-        /// Create request uri
-        /// </summary>
-        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin)
-        {
-            StringBuilder sb = new StringBuilder();
             param = AddOAuthParams(
                 param,
                 ConsumerKey, Token,
@@ -397,13 +409,51 @@ namespace Std.Tweak.CredentialProviders
                 new Uri(uri),
                 ConsumerSecret, Secret,
                 strp, SignatureType, method.ToString());
+
+            // Re-generate parameters with signature
             List<KeyValuePair<string, string>> np = new List<KeyValuePair<string, string>>();
             if (param != null)
                 np.AddRange(param);
             np.Add(new KeyValuePair<string, string>(SignatureKey, sig));
             return uri + "?" + JoinParam(np);
         }
-        
+
+        /// <summary>
+        /// Create authorization header text
+        /// </summary>
+        protected string GetAuthorizationHeaderText(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
+        {
+            string nonce = GetNonce();
+            string timestamp = GetTimestamp();
+            param = AddOAuthParams(
+                param,
+                ConsumerKey, Token,
+                timestamp, nonce,
+                SignatureType, pin);
+            string strp = JoinParam(param);
+            string sig = GetSignature(
+                new Uri(uri),
+                ConsumerSecret, Secret,
+                strp, SignatureType, method.ToString());
+
+            // generate authorization header
+            List<KeyValuePair<string, string>> dict = new List<KeyValuePair<string, string>>();
+            dict.Add(new KeyValuePair<string, string>(VersionKey, Version));
+            dict.Add(new KeyValuePair<string, string>(NonceKey, nonce));
+            dict.Add(new KeyValuePair<string, string>(TimestampKey, timestamp));
+            dict.Add(new KeyValuePair<string, string>(SignatureMethodKey, SignatureType.GetString()));
+            dict.Add(new KeyValuePair<string, string>(ConsumerKeyKey, ConsumerKey));
+            dict.Add(new KeyValuePair<string, string>(SignatureKey, sig));
+            if (!String.IsNullOrEmpty(Token))
+                dict.Add(new KeyValuePair<string, string>(TokenKey, Token));
+
+            // concatenate parameters
+            var concat = from d in dict
+                         orderby d.Key
+                         select d.Key + "=\"" + d.Value + "\"";
+            return String.Join(",", concat);
+        }
+
         /// <summary>
         /// Url encoding some string
         /// </summary>
@@ -496,6 +546,7 @@ namespace Std.Tweak.CredentialProviders
             if (String.IsNullOrEmpty(consumerKey))
                 throw new ArgumentNullException("consumerKey");
             var np = new List<KeyValuePair<string, string>>();
+            // original parameter
             if (origParam != null)
                 np.AddRange(origParam);
             np.Add(new KeyValuePair<string, string>(VersionKey, Version));

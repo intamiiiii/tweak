@@ -163,5 +163,10 @@ namespace Std.Tweak
         {
             return (int)this.Id;
         }
+
+        /// <summary>
+        /// Common object holder
+        /// </summary>
+        public object Tag { get; set; }
     }
 }

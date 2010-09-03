@@ -134,7 +134,6 @@ namespace Std.Tweak
         /// Get favorite timeline
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="page">page of receiving timeline</param>
         public static IEnumerable<TwitterStatus> GetFavorites(this CredentialProvider provider)
         {
             return provider.GetTimeline("favorites.xml", null, null, null, null, null, null);

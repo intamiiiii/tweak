@@ -66,6 +66,7 @@
     <Compile Include="SearchApi.cs" />
     <Compile Include="Streaming\StreamingApi.cs" />
     <Compile Include="Streaming\StreamingController.cs" />
+    <Compile Include="ThirdParty\Twitpic.cs" />
     <Compile Include="TwitterDirectMessage.cs" />
     <Compile Include="TwitterList.cs" />
     <Compile Include="TwitterRelation.cs" />
