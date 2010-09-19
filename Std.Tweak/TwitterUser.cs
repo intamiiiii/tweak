@@ -104,6 +104,8 @@ namespace Std.Tweak
 
             this.ContributorsEnabled = uNode.Element("contributors_enabled").ParseBool();
 
+            this.ListedCount = uNode.Element("listed_count").ParseLong();
+
             this.Profile = new ProfileInformation()
             {
                 BackgroundColor = uNode.Element("profile_background_color").ParseColor(),
@@ -183,6 +185,16 @@ namespace Std.Tweak
         public long FavouritesCount { get; set; }
 
         /// <summary>
+        /// Listed count
+        /// </summary>
+        public long ListedCount { get; set; }
+
+        /// <summary>
+        /// Statuses count
+        /// </summary>
+        public long StatusesCount { get; set; }
+
+        /// <summary>
         /// User utc offset
         /// </summary>
         public long UtcOffset { get; set; }
@@ -191,11 +203,6 @@ namespace Std.Tweak
         /// User time zone
         /// </summary>
         public string TimeZone { get; set; }
-
-        /// <summary>
-        /// User statuses count
-        /// </summary>
-        public long StatusesCount { get; set; }
 
         /// <summary>
         /// notifications property(?)

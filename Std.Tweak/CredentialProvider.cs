@@ -63,7 +63,7 @@ namespace Std.Tweak
         public abstract Stream RequestStreamingAPI(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param);
 
         /// <summary>
-        /// XDocument generator
+        /// Pursing header for check rate-limiting and generate XDocument
         /// </summary>
         /// <param name="res">WebResponse</param>
         /// <returns>XML Document</returns>
@@ -73,7 +73,7 @@ namespace Std.Tweak
         }
 
         /// <summary>
-        /// XDocument generator
+        /// Pursing header for check rate-limiting and generate XDocument
         /// </summary>
         /// <param name="res">WebResponse</param>
         /// <param name="converter">Input converter</param>
@@ -112,6 +112,16 @@ namespace Std.Tweak
             {
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Update rate-limiting valuet
+        /// </summary>
+        internal void UpdateRateLimit(int max, int remain, DateTime reset)
+        {
+            this.RateLimitMax = max;
+            this.RateLimitRemaining = remain;
+            this.RateLimitReset = reset;
         }
     }
 }

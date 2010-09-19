@@ -13,7 +13,7 @@ namespace Std.Tweak.ThirdParty
     public static class TwitPicApi
     {
         static string UploadApiUrl = "http://api.twitpic.com/2/upload.xml";
-
+        static string MediaShowUrl = "http://api.twitpic.com/2/media/show.xml?id={0}";
         /// <summary>
         /// Upload picture to TwitPic
         /// </summary>
@@ -53,6 +53,24 @@ namespace Std.Tweak.ThirdParty
             if (doc.Succeeded == false)
                 return null;
             return doc.Data;
+        }
+
+        /// <summary>
+        /// Get detail XML of image data
+        /// </summary>
+        /// <param name="id">picture id</param>
+        /// <returns>XML document</returns>
+        public static XDocument GetDetail(string id)
+        {
+            var dat = HttpWeb.WebConnect<XDocument>(
+                HttpWeb.CreateRequest(new Uri(String.Format(MediaShowUrl, id))),
+                HttpWeb.StreamConverters.ReadXml);
+            if (dat.Exception != null)
+                throw dat.Exception;
+            else if (!dat.Succeeded)
+                return null;
+            else
+                return dat.Data;
         }
 
     }

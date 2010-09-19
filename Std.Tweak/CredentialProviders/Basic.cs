@@ -72,7 +72,6 @@ namespace Std.Tweak.CredentialProviders
 
             try
             {
-                System.Diagnostics.Debug.WriteLine(target.ToString());
                 var req = Http.CreateRequest(new Uri(target.ToString()), true);
                 req.Credentials = new System.Net.NetworkCredential(UserName, Password);
                 var ret = Http.WebConnect<XDocument>(

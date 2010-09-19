@@ -28,7 +28,6 @@ namespace Std.Tweak
         protected TwitterDirectMessage(XElement node)
             : base()
         {
-            System.Diagnostics.Debug.WriteLine(node.ToString());
             this.Id = node.Element("id").ParseLong();
 
             this.Text = node.Element("text").ParseString();
@@ -50,17 +49,28 @@ namespace Std.Tweak
         }
 
         /// <summary>
-        /// Alias of User property
+        /// Sender user data
         /// </summary>
-        public TwitterUser Sender
-        {
-            get { return this.User; }
-            set { this.User = value; }
-        }
+        public TwitterUser Sender { get; set; }
 
         /// <summary>
         /// Recipient user data
         /// </summary>
         public TwitterUser Recipient { get; set; }
+
+        /// <summary>
+        /// Equals Sender property.
+        /// </summary>
+        public override TwitterUser User
+        {
+            get
+            {
+                return Sender;
+            }
+            set
+            {
+                Sender = value;
+            }
+        }
     }
 }

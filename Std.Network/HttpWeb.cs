@@ -6,6 +6,7 @@ using System.Net;
 using System.IO;
 using System.Drawing;
 using System.Net.Sockets;
+using System.Xml.Linq;
 
 namespace Std.Network
 {
@@ -79,6 +80,32 @@ namespace Std.Network
             public static Image ReadImage(Stream stream)
             {
                 return Image.FromStream(stream);
+            }
+
+            /// <summary>
+            /// Read stream as XML text
+            /// </summary>
+            public static XDocument ReadXml(Stream stream)
+            {
+                return XDocument.Load(stream);
+            }
+
+            /// <summary>
+            /// Read stream and cache in memory
+            /// </summary>
+            /// <param name="stream">stream</param>
+            /// <returns>memory stream</returns>
+            public static Stream ReadStream(Stream stream)
+            {
+                var ms = new MemoryStream();
+                var buf = new byte[2048];
+                int load = 0;
+                while((load = stream.Read(buf, 0, buf.Length)) > 0)
+                {
+                    ms.Write(buf, 0, load);
+                }
+                ms.Seek(0, SeekOrigin.Begin);
+                return ms;
             }
         }
 
@@ -157,6 +184,7 @@ namespace Std.Network
             ResponseConverter<T> responseconv = null,
             byte[] senddata = null)
         {
+            System.Diagnostics.Debug.WriteLine("Connect to " + req.RequestUri.OriginalString);
             if(!(streamconv == null ^ responseconv == null))
                 throw new ArgumentException("StreamConverter or ResponseConverter is must set.");
 
@@ -256,7 +284,6 @@ namespace Std.Network
                 }
                 gross += endsep.Length;
 
-                System.Diagnostics.Debug.WriteLine("gross:" + gross.ToString());
                 req.ContentLength = gross;
                 gross = 0;
                 using (var rs = req.GetRequestStream())
@@ -267,7 +294,6 @@ namespace Std.Network
                         {
                             rs.Write(i, 0, i.Length);
                             gross += i.Length;
-                            System.Diagnostics.Debug.WriteLine("Wrote:" + gross.ToString());
                         }
                     }
                     rs.Write(endsep, 0, endsep.Length); // finalize
@@ -529,7 +555,6 @@ namespace Std.Network
             UpdateCache(boundary, encode);
             if (text != null)
             {
-                System.Diagnostics.Debug.WriteLine("Returned:" + cache);
                 yield return cache;
             }
             else if (fpath != null)

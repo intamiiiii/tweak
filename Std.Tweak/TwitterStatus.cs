@@ -30,7 +30,7 @@ namespace Std.Tweak
             ts.Favorited = false;
             ts.CreatedAt = sNode.Element("created_at").ParseDateTime("ddd MMM d HH':'mm':'ss zzz yyyy");
             ts.InReplyToStatusId = 0;
-            ts.InReplyToUserId = sNode.Element("to_user_id").ParseString();
+            ts.InReplyToUserId = sNode.Element("to_user_id").ParseLong();
             ts.InReplyToScreenName = sNode.Element("to_user").ParseString();
             ts.Kind = StatusKind.SearchResult;
             ts.User = TwitterUser.CreateBySearchNode(sNode);
@@ -46,7 +46,6 @@ namespace Std.Tweak
         protected TwitterStatus(XElement node)
             : base()
         {
-            //System.Diagnostics.Debug.WriteLine(node.ToString());
             this.Id = node.Element("id").ParseLong();
 
             this.Truncated = node.Element("truncated").ParseBool();
@@ -63,7 +62,7 @@ namespace Std.Tweak
 
             this.InReplyToStatusId = node.Element("in_reply_to_status_id").ParseLong();
 
-            this.InReplyToUserId = node.Element("in_reply_to_user_id").ParseString();
+            this.InReplyToUserId = node.Element("in_reply_to_user_id").ParseLong();
 
             this.InReplyToScreenName = node.Element("in_reply_to_screen_name").ParseString();
 
@@ -101,17 +100,17 @@ namespace Std.Tweak
         public string Source { get; set; }
 
         /// <summary>
-        /// Status id which is mentioned this
+        /// Status id which mentioned this
         /// </summary>
         public long InReplyToStatusId { get; set; }
 
         /// <summary>
-        /// User id which has someone who is mentioned this
+        /// User id who mentioned this
         /// </summary>
-        public string InReplyToUserId { get; set; }
+        public long InReplyToUserId { get; set; }
 
         /// <summary>
-        /// User screen name which has someone who is mentioned this
+        /// User screen name who mentioned this
         /// </summary>
         public string InReplyToScreenName { get; set; }
 

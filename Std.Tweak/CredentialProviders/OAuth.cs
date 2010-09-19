@@ -207,8 +207,7 @@ namespace Std.Tweak.CredentialProviders
         }
 
         /// <summary>
-        /// Send query with OAuth credentials<para />
-        /// (Use for OAuth Echo)
+        /// Add header for OAuth-Echo credential
         /// </summary>
         public void MakeOAuthEchoRequest(ref HttpWebRequest request, IEnumerable<KeyValuePair<string, string>> param = null, string providerUri = ProviderEchoAuthorizeUrl)
         {

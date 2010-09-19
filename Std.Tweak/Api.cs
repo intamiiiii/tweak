@@ -768,7 +768,7 @@ namespace Std.Tweak
                 arg = new List<KeyValuePair<string, string>>();
                 arg.Add(new KeyValuePair<string, string>("page", page.Value.ToString()));
             }
-            var ret = provider.RequestAPIv1("blocks.blocking.xml", CredentialProvider.RequestMethod.GET, arg);
+            var ret = provider.RequestAPIv1("blocks/blocking.xml", CredentialProvider.RequestMethod.GET, arg);
             if (ret != null)
                 return from n in ret.Descendants("user")
                        let usr = TwitterUser.CreateByNode(n)
@@ -784,18 +784,22 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         public static IEnumerable<TwitterUser> GetBlockingUsersAll(this CredentialProvider provider)
         {
+            return provider.GetBlockingUsers();
+            // Page parameter is currently disabled.
+            /*
             int page = 1;
             while(true)
             {
                 var ret = GetBlockingUsers(provider, page);
                 if (ret == null)
-                    yield break;
+                    break;
                 foreach(var u in ret)
                     yield return u;
                 if (ret.Count() < 20)
-                    yield break;
+                    break;
                 page++;
             }
+            */
         }
 
         /// <summary>
@@ -1292,10 +1296,35 @@ namespace Std.Tweak
 
         #region Help method
 
+        /// <summary>
+        /// Check twitter is available
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        /// <returns>If twitter is available, returns true</returns>
         public static bool Test(this CredentialProvider provider)
         {
             var doc = provider.RequestAPIv1("help/test.xml", CredentialProvider.RequestMethod.GET, null);
             return doc.Element("ok").ParseBool();
+        }
+
+
+        /// <summary>
+        /// Update rate-limit status explicitly<para />
+        /// Sometimes this api returns wrong value, so you may not rely on this api.<para />
+        /// Results overwrite provider's value.
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        public static bool RateLimitStatus(this CredentialProvider provider)
+        {
+            var doc = provider.RequestAPIv1("account/rate_limit_status.xml", CredentialProvider.RequestMethod.GET, null);
+            if (doc == null) return false;
+            var rate = doc.Element("hash");
+            if (rate == null) return false;
+            provider.UpdateRateLimit(
+                (int)rate.Element("remaining-hits").ParseLong(),
+                (int)rate.Element("hourly-limit").ParseLong(),
+                rate.Element("reset-time-in-seconds").ParseUnixTime());
+            return true;
         }
 
         #endregion
