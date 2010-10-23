@@ -10,6 +10,9 @@ using System.Xml.Linq;
 
 namespace Std.Tweak.Streaming
 {
+    /// <summary>
+    /// Streaming controller class
+    /// </summary>
     public class StreamingController : IDisposable
     {
         #region Factory and constructor
@@ -187,7 +190,7 @@ namespace Std.Tweak.Streaming
                 case StreamingType.filter:
                     return String.Format(SapiV1, type.ToString());
                 case StreamingType.user:
-                    return "http://betastream.twitter.com/2b/user.json";
+                    return "https://userstream.twitter.com/2/user.json";
                 default:
                     throw new ArgumentOutOfRangeException("Invalid streaming value");
             }
@@ -197,6 +200,9 @@ namespace Std.Tweak.Streaming
 
         #region Properties
 
+        /// <summary>
+        /// Is disposed this object
+        /// </summary>
         public bool Disposed { get; private set; }
 
         #endregion
@@ -234,7 +240,6 @@ namespace Std.Tweak.Streaming
         /// </summary>
         private void StreamingThread(object streamarg)
         {
-
             var str = streamarg as Stream;
             if (str == null)
                 return;
@@ -248,6 +253,11 @@ namespace Std.Tweak.Streaming
                         queueTracker.Set();
                     }
                 }
+            }
+            catch (IOException)
+            {
+                // unknown error
+                throw;
             }
             finally
             {
@@ -308,6 +318,9 @@ namespace Std.Tweak.Streaming
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Dispose streaming controller
+        /// </summary>
         public void Dispose()
         {
             if (Disposed)
@@ -315,6 +328,9 @@ namespace Std.Tweak.Streaming
             EndStreaming();
         }
 
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~StreamingController()
         {
             if (streamReceiver != null)

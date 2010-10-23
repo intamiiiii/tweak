@@ -95,7 +95,7 @@ namespace Std.Network
             /// </summary>
             /// <param name="stream">stream</param>
             /// <returns>memory stream</returns>
-            public static Stream ReadStream(Stream stream)
+            public static MemoryStream ReadStream(Stream stream)
             {
                 var ms = new MemoryStream();
                 var buf = new byte[2048];

@@ -51,7 +51,7 @@ namespace Std.Tweak
         /// <param name="method">target method</param>
         /// <param name="param">parameters</param>
         /// <returns>XML document</returns>
-        public abstract XDocument RequestAPI(string uri, RequestMethod method, IEnumerable<KeyValuePair<string,string>> param);
+        public abstract XDocument RequestAPI(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param);
 
         /// <summary>
         /// Request API, returns stream
@@ -100,13 +100,13 @@ namespace Std.Tweak
                     return XDocument.Load(converter(s));
                 }
             }
-            catch (XmlException xe)
+            catch (XmlException)
             {
-                throw new Exceptions.TwitterXmlParseException(xe);
+                throw;
             }
-            catch (IOException ioe)
+            catch (IOException)
             {
-                throw new Exceptions.TwitterException("Document read failed.", ioe);
+                throw;
             }
             catch (Exception)
             {
@@ -117,7 +117,7 @@ namespace Std.Tweak
         /// <summary>
         /// Update rate-limiting valuet
         /// </summary>
-        internal void UpdateRateLimit(int max, int remain, DateTime reset)
+        internal void UpdateRateLimit(int remain, int max, DateTime reset)
         {
             this.RateLimitMax = max;
             this.RateLimitRemaining = remain;

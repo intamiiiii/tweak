@@ -114,6 +114,78 @@ namespace Std.Tweak
         }
 
         /// <summary>
+        /// Get friends timeline
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        public static IEnumerable<TwitterStatus> GetFriendsTimeline(this CredentialProvider provider)
+        {
+            return provider.GetTimeline("statuses/friends_timeline.xml", null);
+        }
+
+        /// <summary>
+        /// Get friends timeline with full params
+        /// </summary>
+        public static IEnumerable<TwitterStatus> GetFriendsTimeline(this CredentialProvider provider, string id = null, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
+        {
+            List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
+            if (sinceId != null && sinceId.HasValue)
+                para.Add(new KeyValuePair<string, string>("since_id", sinceId.Value.ToString()));
+
+            if (maxId != null && maxId.HasValue)
+                para.Add(new KeyValuePair<string, string>("max_id", maxId.Value.ToString()));
+
+            if (count != null)
+                para.Add(new KeyValuePair<string, string>("count", count.ToString()));
+
+            if (page != null)
+                para.Add(new KeyValuePair<string, string>("page", page.ToString()));
+
+            if (!String.IsNullOrEmpty(id))
+                para.Add(new KeyValuePair<string, string>("id", id.ToString()));
+
+            return provider.GetTimeline("statuses/friends_timeline.xml", para);
+        }
+
+        /// <summary>
+        /// Get user timeline
+        /// </summary>
+        /// <param name="provider">credential provider</param>
+        public static IEnumerable<TwitterStatus> GetUserTimeline(this CredentialProvider provider)
+        {
+            return provider.GetTimeline("statuses/user_timeline.xml", null);
+        }
+
+        /// <summary>
+        /// Get user timeline with full params
+        /// </summary>
+        public static IEnumerable<TwitterStatus> GetUserTimeline(this CredentialProvider provider, string id = null, long? userId = null, string screenName = null, long? sinceId = null, long? maxId = null, long? count = null, long? page = null)
+        {
+            List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
+            if (sinceId != null && sinceId.HasValue)
+                para.Add(new KeyValuePair<string, string>("since_id", sinceId.Value.ToString()));
+
+            if (maxId != null && maxId.HasValue)
+                para.Add(new KeyValuePair<string, string>("max_id", maxId.Value.ToString()));
+
+            if (count != null)
+                para.Add(new KeyValuePair<string, string>("count", count.ToString()));
+
+            if (page != null)
+                para.Add(new KeyValuePair<string, string>("page", page.ToString()));
+
+            if (userId != null)
+                para.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
+
+            if (!String.IsNullOrEmpty(id))
+                para.Add(new KeyValuePair<string, string>("id", id.ToString()));
+
+            if (!String.IsNullOrEmpty(screenName))
+                para.Add(new KeyValuePair<string, string>("screen_name", screenName.ToString()));
+
+            return provider.GetTimeline("statuses/user_timeline.xml", para);
+        }
+
+        /// <summary>
         /// Get mentions
         /// </summary>
         /// <param name="provider">credential provider</param>
@@ -164,10 +236,7 @@ namespace Std.Tweak
             var doc = provider.RequestAPIv1(partialUri, method, null);
             if (doc == null)
                 return null;
-            TwitterStatus s = TwitterStatus.CreateByNode(doc.Element("status"));
-            if (s == null)
-                throw new Exceptions.TwitterXmlParseException("status can't read.");
-            return s;
+            return TwitterStatus.CreateByNode(doc.Element("status"));
         }
 
         /// <summary>
@@ -307,11 +376,7 @@ namespace Std.Tweak
             if (xmlDoc == null)
                 return null;
 
-            var sent = TwitterDirectMessage.CreateByNode(xmlDoc.Element("direct_message"));
-            if (sent == null)
-                throw new Exceptions.TwitterRequestException(xmlDoc);
-
-            return sent;
+            return TwitterDirectMessage.CreateByNode(xmlDoc.Element("direct_message"));
         }
 
         /// <summary>
@@ -325,10 +390,7 @@ namespace Std.Tweak
             var xmlDoc = provider.RequestAPIv1(partialUri, CredentialProvider.RequestMethod.POST, null);
             if (xmlDoc == null)
                 return null;
-            var destroyed = TwitterDirectMessage.CreateByNode(xmlDoc.Element("direct_message"));
-            if (destroyed == null)
-                throw new Exceptions.TwitterRequestException(xmlDoc);
-            return destroyed;
+            return TwitterDirectMessage.CreateByNode(xmlDoc.Element("direct_message"));
         }
 
         #endregion

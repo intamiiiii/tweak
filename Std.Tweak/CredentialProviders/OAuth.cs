@@ -91,7 +91,7 @@ namespace Std.Tweak.CredentialProviders
             // pre-validation authentication
             if(String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
             {
-                throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
+                throw new Exceptions.OAuthNotValidatedException();
             }
 
             // generate OAuth uri
@@ -140,13 +140,13 @@ namespace Std.Tweak.CredentialProviders
                         throw new WebException(ret.Message);
                 }
             }
-            catch (WebException we)
+            catch (WebException)
             {
-                throw new Exceptions.TwitterRequestException(we);
+                throw;
             }
-            catch (XmlException xe)
+            catch (XmlException)
             {
-                throw new Exceptions.TwitterXmlParseException(xe);
+                throw;
             }
             catch (IOException)
             {
@@ -171,16 +171,16 @@ namespace Std.Tweak.CredentialProviders
 
             if (String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
             {
-                throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
+                throw new Exceptions.OAuthNotValidatedException();
             }
 
             var authuri = CreateUrl(target, method, param);
             try
             {
                 var req = HttpWeb.CreateRequest(new Uri(authuri), method.ToString());
-                // timeout is 5 seconds
+                // timeout is 8 seconds
 
-                req.Timeout = 5000;
+                req.Timeout = 8000;
                 var ret = HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream);
                 if (ret.Succeeded && ret.Data != null)
                 {
@@ -196,9 +196,9 @@ namespace Std.Tweak.CredentialProviders
                         throw new WebException(ret.Message);
                 }
             }
-            catch (WebException we)
+            catch (WebException)
             {
-                throw new Exceptions.TwitterRequestException(we);
+                throw;
             }
             catch (IOException)
             {
@@ -214,7 +214,7 @@ namespace Std.Tweak.CredentialProviders
             // pre-validation authentication
             if (String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
             {
-                throw new Exceptions.TwitterOAuthRequestException("OAuth is not validated.");
+                throw new Exceptions.OAuthNotValidatedException();
             }
 
             request.Headers["X-Auth-Service-Provider"] = providerUri;

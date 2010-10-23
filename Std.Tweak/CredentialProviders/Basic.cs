@@ -117,13 +117,13 @@ namespace Std.Tweak.CredentialProviders
                         throw new WebException(ret.Message);
                 }
             }
-            catch (WebException we)
+            catch (WebException)
             {
-                throw new Exceptions.TwitterRequestException(we);
+                throw;
             }
-            catch (XmlException xe)
+            catch (XmlException)
             {
-                throw new Exceptions.TwitterXmlParseException(xe);
+                throw;
             }
             catch (IOException)
             {
@@ -170,13 +170,13 @@ namespace Std.Tweak.CredentialProviders
                         throw new WebException(ret.Message);
                 }
             }
-            catch (WebException we)
+            catch (WebException)
             {
-                throw new Exceptions.TwitterRequestException(we);
+                throw;
             }
-            catch (XmlException xe)
+            catch (XmlException)
             {
-                throw new Exceptions.TwitterXmlParseException(xe);
+                throw;
             }
             catch (IOException)
             {

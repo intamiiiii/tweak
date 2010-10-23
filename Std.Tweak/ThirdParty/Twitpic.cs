@@ -72,6 +72,5 @@ namespace Std.Tweak.ThirdParty
             else
                 return dat.Data;
         }
-
     }
 }

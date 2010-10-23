@@ -19,6 +19,9 @@ namespace Std.Tweak.Streaming
             return new TwitterStreamingElement(node);
         }
 
+        /// <summary>
+        /// Create TwitterStreamingElement
+        /// </summary>
         public TwitterStreamingElement(TwitterStatus tstatus)
         {
             this.Kind = ElementKind.Status;
@@ -26,6 +29,9 @@ namespace Std.Tweak.Streaming
             this.SourceUser = tstatus.User;
         }
 
+        /// <summary>
+        /// Create TwitterStreamingElement
+        /// </summary>
         public TwitterStreamingElement(TwitterDirectMessage dmsg)
         {
             this.Kind = ElementKind.DirectMessage;
