@@ -234,9 +234,9 @@ namespace Std.Tweak.CredentialProviders
         /// </summary>
         protected abstract string ConsumerSecret { get; }
 
-        const string ProviderRequestTokenUrl = "http://twitter.com/oauth/request_token";
-        const string ProviderAccessTokenUrl = "http://twitter.com/oauth/access_token";
-        const string ProviderAuthorizeUrl = "http://twitter.com/oauth/authorize";
+        const string ProviderRequestTokenUrl = "http://api.twitter.com/oauth/request_token";
+        const string ProviderAccessTokenUrl = "http://api.twitter.com/oauth/access_token";
+        const string ProviderAuthorizeUrl = "http://api.twitter.com/oauth/authorize";
         const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
 
         const OAuthSigType SignatureType = OAuthSigType.Hmac_Sha1;
@@ -303,8 +303,8 @@ namespace Std.Tweak.CredentialProviders
         {
             try
             {
-                var target = CreateUrl(ProviderRequestTokenUrl, RequestMethod.POST, null);
-                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "POST", null);
+                var target = CreateUrl(ProviderRequestTokenUrl, RequestMethod.GET, null);
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "GET", null);
                 if (ret.Exception != null)
                     throw ret.Exception;
                 if (!ret.Succeeded)
