@@ -42,10 +42,12 @@ namespace Std.Tweak.CredentialProviders
             para.Add(new KeyValuePair<string, string>(XAuthPassword, UrlEncode(password, Encoding.Default, true)));
             para.Add(new KeyValuePair<string, string>(XAuthMode, "client_auth"));
 
-            var target = CreateUrl(xAuthProviderAccessTokenUrl, RequestMethod.POST, para);
+            var head = GetHeader(xAuthProviderAccessTokenUrl, RequestMethod.POST, para);
             try
             {
-                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "POST", null);
+                var req = HttpWeb.CreateRequest(new Uri(xAuthProviderAccessTokenUrl + "?" + JoinParamAsUrl(para)));
+                req.Headers.Add("Authorization", "OAuth " + head);
+                var ret = HttpWeb.WebConnectDownloadString(req);
                 if (ret.Exception != null)
                     throw ret.Exception;
                 if (!ret.Succeeded)

@@ -60,6 +60,7 @@
     <Compile Include="CredentialProvider.cs" />
     <Compile Include="CredentialProviders\Basic.cs" />
     <Compile Include="CredentialProviders\OAuth.cs" />
+    <Compile Include="CredentialProviders\OAuth.old.cs" />
     <Compile Include="CredentialProviders\xAuth.cs" />
     <Compile Include="Exceptions\OAuthNotValidatedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

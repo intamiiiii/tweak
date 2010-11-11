@@ -212,7 +212,7 @@ namespace Std.Tweak.Streaming
         /// <summary>
         /// Thread disconnected
         /// </summary>
-        public event Action OnDisconnected;
+        public event Action OnDisconnected = () => { };
 
         #endregion
 
@@ -254,16 +254,23 @@ namespace Std.Tweak.Streaming
                     }
                 }
             }
-            catch (IOException)
+            catch (Exception e)
             {
-                // unknown error
-                throw;
+                // On disconnecting, catch "IOException", but this exception can ignore.
+                if (Disposed) return;
+                // This method runs on another thread, so must treat ALL exceptions!
+                OnStreamingErrorThrown.Invoke(e);
             }
             finally
             {
-                str.Close();
-                if (OnDisconnected != null)
-                    OnDisconnected.Invoke();
+                // Close stream
+                try
+                {
+                    str.Close();
+                    if (OnDisconnected != null)
+                        OnDisconnected.Invoke();
+                }
+                catch { }
             }
         }
 
@@ -297,9 +304,17 @@ namespace Std.Tweak.Streaming
                 {
                     // if not receives any information in 90 seconds,
                     // disconnect immediately.
-                    if (!queueTracker.WaitOne(90 * 1000))
+                    bool flag = false;
+                    for (int i = 0; i < 90; i++)
                     {
-                        EndStreaming();
+                        flag = queueTracker.WaitOne(1000);
+                        if (streamReceiver == null) break; // stopped receiving
+                        if (flag) break;
+                    }
+                    if (!flag)
+                    {
+                        if (!Disposed)
+                            EndStreaming();
                         yield break;
                     }
                 }
@@ -337,5 +352,10 @@ namespace Std.Tweak.Streaming
                 streamReceiver.Abort();
             streamReceiver = null;
         }
+
+        /// <summary>
+        /// ストリーミングスレッドで例外がスローされた場合に呼び出されます。
+        /// </summary>
+        public event Action<Exception> OnStreamingErrorThrown = (e) => { };
     }
 }

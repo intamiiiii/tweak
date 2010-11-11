@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,8 +14,31 @@ using System.Runtime.Serialization.Json;
 
 namespace Std.Tweak.CredentialProviders
 {
+    static class OAuthSigTypeResolver
+    {
+        public static string GetString(this OAuth.OAuthSigType sig)
+        {
+            switch (sig)
+            {
+                case OAuth.OAuthSigType.Hmac_Sha1:
+                    return HMACSHA1;
+                case OAuth.OAuthSigType.PlainText:
+                    return PlainText;
+                case OAuth.OAuthSigType.Rsa_Sha1:
+                    return RSASHA1;
+                default:
+                    return null;
+            }
+        }
+
+        const string HMACSHA1 = "HMAC-SHA1";
+        const string PlainText = "PLAINTEXT";
+        const string RSASHA1 = "RSA-SHA1";
+
+    }
+
     /// <summary>
-    /// OAuth abstracted class (version 2)
+    /// OAuth abstracted class
     /// </summary>
     /// <remarks>
     /// You MUST get api token and secret for your application.
@@ -46,7 +70,7 @@ namespace Std.Tweak.CredentialProviders
         /// <param name="method">using method for HTTP negotiation</param>
         /// <param name="param">additional parameters</param>
         /// <returns>XML documents</returns>
-        public sealed override XDocument RequestAPI(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        public sealed override XDocument RequestAPI(string uri, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string,string>> param)
         {
             // validate arguments
             if (String.IsNullOrEmpty(uri))
@@ -66,22 +90,17 @@ namespace Std.Tweak.CredentialProviders
                 throw new ArgumentException("format can't identify. uriPartial is must ends with .xml or .json.");
 
             // pre-validation authentication
-            if (String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
+            if(String.IsNullOrEmpty(Token) || String.IsNullOrEmpty(Secret))
             {
                 throw new Exceptions.OAuthNotValidatedException();
             }
 
-            var reg = GetHeader(target, method, param);
+            // generate OAuth uri
+            var authuri = CreateUrl(target, method, param);
             try
             {
-                var ps = JoinParamAsUrl(param);
-                if (!String.IsNullOrWhiteSpace(ps))
-                {
-                    target += "?" + ps;
-                }
-                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString());
-                req.Headers.Add("Authorization", "OAuth " + reg);
-                var ret = HttpWeb.WebConnect<XDocument>(req,
+                var ret = HttpWeb.WebConnect<XDocument>(
+                    HttpWeb.CreateRequest(new Uri(authuri), method.ToString()),
                     responseconv: new HttpWeb.ResponseConverter<XDocument>((res) =>
                     {
                         int rateLimit;
@@ -143,7 +162,7 @@ namespace Std.Tweak.CredentialProviders
         /// <param name="method">using method for HTTP negotiation</param>
         /// <param name="param">parameters</param>
         /// <returns>Callback stream</returns>
-        public sealed override Stream RequestStreamingAPI(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
+        public sealed override Stream RequestStreamingAPI(string uri, CredentialProvider.RequestMethod method, IEnumerable<KeyValuePair<string, string>> param)
         {
             if (String.IsNullOrEmpty(uri))
                 throw new ArgumentNullException(uri);
@@ -156,19 +175,13 @@ namespace Std.Tweak.CredentialProviders
                 throw new Exceptions.OAuthNotValidatedException();
             }
 
-            var reg = GetHeader(target, method, param);
+            var authuri = CreateUrl(target, method, param);
             try
             {
-                var ps = JoinParamAsUrl(param);
-                if (!String.IsNullOrWhiteSpace(ps))
-                {
-                    target += "?" + ps;
-                }
+                var req = HttpWeb.CreateRequest(new Uri(authuri), method.ToString());
+                // timeout is 8 seconds
 
-                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString());
-                req.Headers.Add("Authorization", "OAuth " + reg);
                 req.Timeout = 8000;
-
                 var ret = HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream);
                 if (ret.Succeeded && ret.Data != null)
                 {
@@ -206,11 +219,74 @@ namespace Std.Tweak.CredentialProviders
             }
 
             request.Headers["X-Auth-Service-Provider"] = providerUri;
-            var header = GetHeader(providerUri, RequestMethod.GET, param);
+            var header = GetAuthorizationHeaderText(providerUri, RequestMethod.GET, param);
             request.Headers["X-Verify-Credentials-Authorization"] = "OAuth realm=\"http://api.twitter.com/\"," + header;
         }
 
-        #region User property
+        #region OAuth property
+
+        /// <summary>
+        /// Consumer key
+        /// </summary>
+        protected abstract string ConsumerKey { get; }
+
+        /// <summary>
+        /// Consumer secret
+        /// </summary>
+        protected abstract string ConsumerSecret { get; }
+
+        const string ProviderRequestTokenUrl = "http://api.twitter.com/oauth/request_token";
+        const string ProviderAccessTokenUrl = "http://api.twitter.com/oauth/access_token";
+        const string ProviderAuthorizeUrl = "http://api.twitter.com/oauth/authorize";
+        const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
+
+        const OAuthSigType SignatureType = OAuthSigType.Hmac_Sha1;
+
+        #endregion
+
+        #region OAuth reserved values
+        /// <summary>
+        /// OAuth signature type
+        /// </summary>
+        public enum OAuthSigType
+        {
+            /// <summary>
+            /// HMAC SHA1
+            /// </summary>
+            Hmac_Sha1,
+            /// <summary>
+            /// Plain text
+            /// </summary>
+            PlainText,
+            /// <summary>
+            /// RSA SHA1
+            /// </summary>
+            Rsa_Sha1
+        }
+
+
+        const string Version = "1.0";
+        const string ParamPrefix = "oauth_";
+
+        #region Key values
+        const string ConsumerKeyKey = "oauth_consumer_key";
+        const string CallbackKey = "oauth_callback";
+        const string VersionKey = "oauth_version";
+        const string SignatureMethodKey = "oauth_signature_method";
+        const string SignatureKey = "oauth_signature";
+        const string TimestampKey = "oauth_timestamp";
+        const string NonceKey = "oauth_nonce";
+        const string TokenKey = "oauth_token";
+        const string TokenSecretKey = "oauth_token_secret";
+        const string VerifierKey = "oauth_verifier";
+        #endregion
+
+        const string AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
+        #endregion
+
+        #region OAuth system
+
+        #region Property
 
         /// <summary>
         /// OAuth token
@@ -224,17 +300,158 @@ namespace Std.Tweak.CredentialProviders
 
         #endregion
 
-        protected string GetHeader(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
+        private string GetRequestToken()
         {
-            var oap = GetOAuthParams(
+            try
+            {
+                var target = CreateUrl(ProviderRequestTokenUrl, RequestMethod.GET, null);
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "GET", null);
+                if (ret.Exception != null)
+                    throw ret.Exception;
+                if (!ret.Succeeded)
+                    throw new Exception(ret.Message);
+                var query = SplitParam(ret.Data);
+                foreach (var q in query)
+                {
+                    if (q.Key == "oauth_token")
+                    {
+                        return q.Value;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return null;
+        }
+
+        private string GetProviderAuthUrl(string token)
+        {
+            return ProviderAuthorizeUrl + "?oauth_token=" + token;
+        }
+
+        /// <summary>
+        /// Get provider's authorization url
+        /// </summary>
+        /// <param name="reqToken">request token string</param>
+        /// <returns>access uri</returns>
+        public Uri GetProviderAuthUrl(out string reqToken)
+        {
+            reqToken = GetRequestToken();
+            return new Uri(GetProviderAuthUrl(reqToken));
+        }
+        
+        /// <summary>
+        /// Get access token from request token
+        /// </summary>
+        /// <param name="token">request token</param>
+        /// <param name="pin">personal identify code</param>
+        /// <param name="userId">user id</param>
+        /// <returns>succeed authorization</returns>
+        public bool GetAccessToken(string token, string pin, out string userId)
+        {
+            
+            //Generate param
+            string paramName = TokenKey + "=";
+            int idx = token.IndexOf(paramName);
+
+            if (idx > 0)
+                Token = token.Substring(idx + paramName.Length);
+            else
+                Token = token;
+
+            var target = CreateUrl(ProviderAccessTokenUrl, RequestMethod.GET, null, pin);
+            try
+            {
+                var ret = HttpWeb.WebConnectDownloadString(new Uri(target), "GET", null);
+                if (ret.Exception != null)
+                    throw ret.Exception;
+                if (!ret.Succeeded)
+                {
+                    userId = null;
+                    return false;
+                }
+                var rd = SplitParamDict(ret.Data);
+                if (rd.ContainsKey("oauth_token") && rd.ContainsKey("oauth_token_secret"))
+                {
+                    Token = rd["oauth_token"];
+                    Secret = rd["oauth_token_secret"];
+                    userId = rd["screen_name"];
+                    return true;
+                }
+                else
+                {
+                    userId = null;
+                    return false;
+                }
+            }
+            catch (WebException)
+            {
+                throw;
+            }
+        }
+
+        #region Negotiation method
+
+        /// <summary>
+        /// Create request uri
+        /// </summary>
+        protected string CreateUrl(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
+        {
+            param = AddOAuthParams(
+                param,
                 ConsumerKey, Token,
                 GetTimestamp(), GetNonce(),
-                SignatureMethod, pin);
-            var sig = GetSignature(new Uri(uri), ConsumerSecret, Secret,
-                JoinParamAsUrl(param == null ? oap : oap.Concat(param)),
-                SignatureMethod, method.ToString());
-            return JoinParamAsHeader(
-                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToArray());
+                SignatureType, pin);
+            string strp = JoinParam(param);
+            string sig = GetSignature(
+                new Uri(uri),
+                ConsumerSecret, Secret,
+                strp, SignatureType, method.ToString());
+
+            // Re-generate parameters with signature
+            List<KeyValuePair<string, string>> np = new List<KeyValuePair<string, string>>();
+            if (param != null)
+                np.AddRange(param);
+            np.Add(new KeyValuePair<string, string>(SignatureKey, sig));
+            return uri + "?" + JoinParam(np);
+        }
+
+        /// <summary>
+        /// Create authorization header text
+        /// </summary>
+        protected string GetAuthorizationHeaderText(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
+        {
+            string nonce = GetNonce();
+            string timestamp = GetTimestamp();
+            param = AddOAuthParams(
+                param,
+                ConsumerKey, Token,
+                timestamp, nonce,
+                SignatureType, pin);
+            string strp = JoinParam(param);
+            string sig = GetSignature(
+                new Uri(uri),
+                ConsumerSecret, Secret,
+                strp, SignatureType, method.ToString());
+
+            // generate authorization header
+            List<KeyValuePair<string, string>> dict = new List<KeyValuePair<string, string>>();
+            dict.Add(new KeyValuePair<string, string>(VersionKey, Version));
+            dict.Add(new KeyValuePair<string, string>(NonceKey, nonce));
+            dict.Add(new KeyValuePair<string, string>(TimestampKey, timestamp));
+            dict.Add(new KeyValuePair<string, string>(SignatureMethodKey, SignatureType.GetString()));
+            dict.Add(new KeyValuePair<string, string>(ConsumerKeyKey, ConsumerKey));
+            dict.Add(new KeyValuePair<string, string>(SignatureKey, sig));
+            if (!String.IsNullOrEmpty(Token))
+                dict.Add(new KeyValuePair<string, string>(TokenKey, Token));
+
+            // concatenate parameters
+            var concat = from d in dict
+                         orderby d.Key
+                         select d.Key + "=\"" + d.Value + "\"";
+            return String.Join(",", concat);
         }
 
         /// <summary>
@@ -307,218 +524,90 @@ namespace Std.Tweak.CredentialProviders
             }
         }
 
-        #region Getting access token
-
-        private string GetRequestToken()
-        {
-            var reg = GetHeader(ProviderAccessTokenUrl, RequestMethod.GET, null);
-            try
-            {
-                var req = HttpWeb.CreateRequest(new Uri(ProviderRequestTokenUrl));
-                req.Headers.Add("Authorization", "OAuth " + reg);
-                var ret = HttpWeb.WebConnectDownloadString(req);
-                if (ret.Exception != null)
-                    throw ret.Exception;
-                if (!ret.Succeeded)
-                    throw new Exception(ret.Message);
-                var query = SplitParam(ret.Data);
-                foreach (var q in query)
-                {
-                    if (q.Key == "oauth_token")
-                    {
-                        return q.Value;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return null;
-        }
-
-        private string GetProviderAuthUrl(string token)
-        {
-            return ProviderAuthorizeUrl + "?oauth_token=" + token;
-        }
-
         /// <summary>
-        /// Get provider's authorization url
+        /// Join parameters to string
         /// </summary>
-        /// <param name="reqToken">request token string</param>
-        /// <returns>access uri</returns>
-        public Uri GetProviderAuthUrl(out string reqToken)
+        protected string JoinParam(IEnumerable<KeyValuePair<string, string>> param)
         {
-            reqToken = GetRequestToken();
-            return new Uri(GetProviderAuthUrl(reqToken));
-        }
-
-        /// <summary>
-        /// Get access token from request token
-        /// </summary>
-        /// <param name="token">request token</param>
-        /// <param name="pin">personal identify code</param>
-        /// <param name="userId">user id</param>
-        /// <returns>succeed authorization</returns>
-        public bool GetAccessToken(string token, string pin, out string userId)
-        {
-
-            //Generate param
-            string paramName = TokenKey + "=";
-            int idx = token.IndexOf(paramName);
-
-            if (idx > 0)
-                Token = token.Substring(idx + paramName.Length);
-            else
-                Token = token;
-
-            var reg = GetHeader(ProviderAccessTokenUrl, RequestMethod.GET, null, pin);
-            try
-            {
-                var req = HttpWeb.CreateRequest(new Uri(ProviderAccessTokenUrl));
-                req.Headers.Add("Authorization", "OAuth " + reg);
-                var ret = HttpWeb.WebConnectDownloadString(req);
-                if (ret.Exception != null)
-                    throw ret.Exception;
-                if (!ret.Succeeded)
-                {
-                    userId = null;
-                    return false;
-                }
-                var rd = SplitParamDict(ret.Data);
-                if (rd.ContainsKey("oauth_token") && rd.ContainsKey("oauth_token_secret"))
-                {
-                    Token = rd["oauth_token"];
-                    Secret = rd["oauth_token_secret"];
-                    userId = rd["screen_name"];
-                    return true;
-                }
-                else
-                {
-                    userId = null;
-                    return false;
-                }
-            }
-            catch (WebException)
-            {
-                throw;
-            }
+            var jparam = from p in param
+                         orderby p.Key
+                         select p.Key + "=" + p.Value;
+            return String.Join("&", jparam.ToArray());
         }
 
         #endregion
 
-        #region Inherit property
+        #region Common method
 
-        /// <summary>
-        /// Consumer key
-        /// </summary>
-        protected abstract string ConsumerKey { get; }
-
-        /// <summary>
-        /// Consumer secret
-        /// </summary>
-        protected abstract string ConsumerSecret { get; }
-
-        #endregion
-
-        #region OAuth system property and constant values
-
-        const string Version = "1.0";
-        const string ParamPrefix = "oauth_";
-
-        #region Key values
-        const string ConsumerKeyKey = "oauth_consumer_key";
-        const string CallbackKey = "oauth_callback";
-        const string VersionKey = "oauth_version";
-        const string SignatureMethodKey = "oauth_signature_method";
-        const string SignatureKey = "oauth_signature";
-        const string TimestampKey = "oauth_timestamp";
-        const string NonceKey = "oauth_nonce";
-        const string TokenKey = "oauth_token";
-        const string TokenSecretKey = "oauth_token_secret";
-        const string VerifierKey = "oauth_verifier";
-        #endregion
-
-        const string ProviderRequestTokenUrl = "http://api.twitter.com/oauth/request_token";
-        const string ProviderAccessTokenUrl = "http://api.twitter.com/oauth/access_token";
-        const string ProviderAuthorizeUrl = "http://api.twitter.com/oauth/authorize";
-        const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
-
-        public enum OAuthSignatureMethod
+        private IEnumerable<KeyValuePair<string, string>> AddOAuthParams(IEnumerable<KeyValuePair<string, string>> origParam,
+            string consumerKey, string token,
+            string timeStamp, string nonce, OAuthSigType sigType, string verifier)
         {
-            /// <summary>
-            /// HMAC SHA1
-            /// </summary>
-            Hmac_Sha1,
-            /// <summary>
-            /// Plain text
-            /// </summary>
-            PlainText,
-            /// <summary>
-            /// RSA SHA1
-            /// </summary>
-            Rsa_Sha1
+            if (String.IsNullOrEmpty(consumerKey))
+                throw new ArgumentNullException("consumerKey");
+            var np = new List<KeyValuePair<string, string>>();
+            // original parameter
+            if (origParam != null)
+                np.AddRange(origParam);
+            np.Add(new KeyValuePair<string, string>(VersionKey, Version));
+            np.Add(new KeyValuePair<string, string>(NonceKey, nonce));
+            np.Add(new KeyValuePair<string, string>(TimestampKey, timeStamp));
+            np.Add(new KeyValuePair<string, string>(SignatureMethodKey, sigType.GetString()));
+            np.Add(new KeyValuePair<string, string>(ConsumerKeyKey, consumerKey));
+            if (!String.IsNullOrEmpty(verifier))
+                np.Add(new KeyValuePair<string, string>(VerifierKey, verifier));
+            if (!String.IsNullOrEmpty(token))
+                np.Add(new KeyValuePair<string, string>(TokenKey, token));
+            return np;
         }
-
-        private string GetOAuthSignatureMethodValue(OAuthSignatureMethod sigmethod)
-        {
-            switch (sigmethod)
-            {
-                case OAuthSignatureMethod.Hmac_Sha1:
-                    return "HMAC-SHA1";
-                case OAuthSignatureMethod.PlainText:
-                    return "PLAINTEXT";
-                case OAuthSignatureMethod.Rsa_Sha1:
-                    return "RSA-SHA1";
-                default:
-                    return null;
-            }
-        }
-
-        const OAuthSignatureMethod SignatureMethod = OAuthSignatureMethod.Hmac_Sha1;
-
-        const string AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
-
-        #endregion
-
-        #region Algorithms
 
         private string GetSignature(
             Uri uri, string consumerSecret, string tokenSecret,
-            string joinedParam, OAuthSignatureMethod sigMethod,
+            string joinedParam, OAuthSigType sigType,
             string requestMethod)
         {
-            switch (sigMethod)
+            switch (sigType)
             {
-                case OAuthSignatureMethod.PlainText:
+                case OAuthSigType.PlainText:
                     return HttpUtility.UrlEncode(consumerSecret + "&" + tokenSecret);
-                case OAuthSignatureMethod.Hmac_Sha1:
+                case OAuthSigType.Hmac_Sha1:
                     if (String.IsNullOrEmpty(requestMethod))
                         throw new ArgumentNullException("httpMethod");
 
-                    // formatting URI
+                    //URLのフォーマット
                     var regularUrl = uri.Scheme + "://" + uri.Host;
                     if (!((uri.Scheme == "http" && uri.Port == 80) || (uri.Scheme == "https" && uri.Port == 443)))
                         regularUrl += ":" + uri.Port;
                     regularUrl += uri.AbsolutePath;
+                    //シグネチャの生成
 
-                    // Generate signature
                     StringBuilder SigSource = new StringBuilder();
                     SigSource.Append(UrlEncode(requestMethod.ToUpper(), Encoding.UTF8, true) + "&");
                     SigSource.Append(UrlEncode(regularUrl, Encoding.UTF8, true) + "&");
                     SigSource.Append(UrlEncode(joinedParam, Encoding.UTF8, true));
 
-                    // Calcuate hash
+                    //ハッシュの計算
                     using (HMACSHA1 hmacsha1 = new HMACSHA1())
                     {
                         hmacsha1.Key = Encoding.ASCII.GetBytes(string.Format("{0}&{1}", UrlEncode(consumerSecret, Encoding.UTF8, true), string.IsNullOrEmpty(tokenSecret) ? "" : UrlEncode(tokenSecret, Encoding.UTF8, true)));
                         return UrlEncode(ComputeHash(hmacsha1, SigSource.ToString()), Encoding.UTF8, false);
                     }
-                case OAuthSignatureMethod.Rsa_Sha1:
+                case OAuthSigType.Rsa_Sha1:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentException("Unknown signature type", "signatureType");
             }
+        }
+
+        private string ComputeHash(HashAlgorithm algorithm, string raw)
+        {
+            if (algorithm == null)
+                throw new ArgumentNullException("algorithm");
+            if (String.IsNullOrEmpty(raw))
+                throw new ArgumentNullException("raw");
+            byte[] dat = Encoding.ASCII.GetBytes(raw);
+            byte[] hash = algorithm.ComputeHash(dat);
+            return Convert.ToBase64String(hash);
         }
 
         private string GetNonce()
@@ -532,57 +621,10 @@ namespace Std.Tweak.CredentialProviders
             //Timestamp
             return UnixEpoch.GetUnixEpochByDateTime(DateTime.Now).ToString();
         }
+
         #endregion
-
-        #region Utilities
-
-        protected string JoinParamAsHeader(IEnumerable<KeyValuePair<string, string>> param)
-        {
-            if (param == null) return String.Empty;
-            return String.Join(", ", from p in param
-                                     orderby p.Key
-                                     select p.Key + "=\"" + p.Value + "\"");
-        }
-
-        protected string JoinParamAsUrl(IEnumerable<KeyValuePair<string, string>> param)
-        {
-            if (param == null) return String.Empty;
-            return String.Join("&", from p in param
-                                    orderby p.Key
-                                    select p.Key + "=" + p.Value);
-        }
-
-        private IEnumerable<KeyValuePair<string, string>> GetOAuthParams
-            (string consumerKey, string token, string timeStamp, string nonce, OAuthSignatureMethod sigMethod, string verifier)
-        {
-            if (String.IsNullOrEmpty(consumerKey))
-                throw new ArgumentNullException("consumerKey");
-            var np = new List<KeyValuePair<string, string>>();
-            // original parameter
-            np.Add(new KeyValuePair<string, string>(VersionKey, Version));
-            np.Add(new KeyValuePair<string, string>(NonceKey, nonce));
-            np.Add(new KeyValuePair<string, string>(TimestampKey, timeStamp));
-            np.Add(new KeyValuePair<string, string>(SignatureMethodKey, GetOAuthSignatureMethodValue(sigMethod)));
-            np.Add(new KeyValuePair<string, string>(ConsumerKeyKey, consumerKey));
-            if (!String.IsNullOrEmpty(verifier))
-                np.Add(new KeyValuePair<string, string>(VerifierKey, verifier));
-            if (!String.IsNullOrEmpty(token))
-                np.Add(new KeyValuePair<string, string>(TokenKey, token));
-            return np;
-        }
-
-
-        private string ComputeHash(HashAlgorithm algorithm, string raw)
-        {
-            if (algorithm == null)
-                throw new ArgumentNullException("algorithm");
-            if (String.IsNullOrEmpty(raw))
-                throw new ArgumentNullException("raw");
-            byte[] dat = Encoding.ASCII.GetBytes(raw);
-            byte[] hash = algorithm.ComputeHash(dat);
-            return Convert.ToBase64String(hash);
-        }
 
         #endregion
     }
 }
+*/

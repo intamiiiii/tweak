@@ -570,6 +570,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="user">target user id or screen name</param>
+        [Obsolete("Please use other overload.")]
         public static TwitterUser CreateFriendship(this CredentialProvider provider, string user)
         {
             var ret = provider.RequestAPIv1("friendships/create/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);
@@ -612,6 +613,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="user">target user id or screen name</param>
+        [Obsolete("Please use other overload.")]
         public static TwitterUser DestroyFriendship(this CredentialProvider provider, string user)
         {
             var ret = provider.RequestAPIv1("friendships/destroy/" + user + ".xml", CredentialProvider.RequestMethod.POST, null);

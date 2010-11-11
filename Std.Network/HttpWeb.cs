@@ -15,7 +15,7 @@ namespace Std.Network
     /// </summary>
     public static class HttpWeb
     {
-        static string userAgentString = "Std/HttpLib 2.0(.net framework 4.0)";
+        static string userAgentString = "Std/HttpLib 2.1(.net framework 4.0)";
 
         /// <summary>
         /// User agent string
@@ -26,7 +26,7 @@ namespace Std.Network
             set { userAgentString = value; }
         }
 
-        static int timeoutInterval = 5000;
+        static int timeoutInterval = 20000;
 
         /// <summary>
         /// Timeout interval
@@ -184,7 +184,7 @@ namespace Std.Network
             ResponseConverter<T> responseconv = null,
             byte[] senddata = null)
         {
-            System.Diagnostics.Debug.WriteLine("Connect to " + req.RequestUri.OriginalString);
+            System.Diagnostics.Debug.WriteLine(req.Method + " Connect to " + req.RequestUri.OriginalString);
             if(!(streamconv == null ^ responseconv == null))
                 throw new ArgumentException("StreamConverter or ResponseConverter is must set.");
 
