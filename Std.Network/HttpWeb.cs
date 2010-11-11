@@ -202,6 +202,10 @@ namespace Std.Network
                         s.Write(senddata, 0, senddata.Length);
                     }
                 }
+                else
+                {
+                    req.ContentLength = 0;
+                }
                 return TreatWebResponse((HttpWebResponse)req.GetResponse(), streamconv, responseconv);
             }
             catch (SocketException e)
@@ -311,6 +315,14 @@ namespace Std.Network
             }
             catch (WebException e)
             {
+                if (e.Response != null && e.Response.ContentLength > 0)
+                {
+                    using (var sr = new StreamReader(e.Response.GetResponseStream()))
+                    {
+                        System.Diagnostics.Debug.WriteLine(sr.ReadToEnd());
+                    }
+                    e.Response.Close();
+                }
                 return new OperationResult<T>(req.RequestUri, e);
             }
         }

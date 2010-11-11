@@ -75,9 +75,14 @@ namespace Std.Tweak.CredentialProviders
             try
             {
                 var ps = JoinParamAsUrl(param);
-                if (!String.IsNullOrWhiteSpace(ps))
+                if (method == RequestMethod.GET && !String.IsNullOrWhiteSpace(ps))
                 {
                     target += "?" + ps;
+                }
+                byte[] body = null;
+                if (method == RequestMethod.POST && !String.IsNullOrWhiteSpace(ps))
+                {
+                    body = Encoding.ASCII.GetBytes(ps);
                 }
                 var req = HttpWeb.CreateRequest(new Uri(target), method.ToString());
                 req.Headers.Add("Authorization", "OAuth " + reg);
@@ -109,7 +114,7 @@ namespace Std.Tweak.CredentialProviders
                             default:
                                 throw new NotSupportedException("Invalid format.");
                         }
-                    }));
+                    }), senddata: body);
                 if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;
@@ -224,19 +229,6 @@ namespace Std.Tweak.CredentialProviders
 
         #endregion
 
-        protected string GetHeader(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null)
-        {
-            var oap = GetOAuthParams(
-                ConsumerKey, Token,
-                GetTimestamp(), GetNonce(),
-                SignatureMethod, pin);
-            var sig = GetSignature(new Uri(uri), ConsumerSecret, Secret,
-                JoinParamAsUrl(param == null ? oap : oap.Concat(param)),
-                SignatureMethod, method.ToString());
-            return JoinParamAsHeader(
-                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToArray());
-        }
-
         /// <summary>
         /// Url encoding some string
         /// </summary>
@@ -268,53 +260,14 @@ namespace Std.Tweak.CredentialProviders
             return result.ToString();
         }
 
-        /// <summary>
-        /// Split parameters into dictionary
-        /// </summary>
-        protected Dictionary<string, string> SplitParamDict(string param)
-        {
-            var retdict = new Dictionary<string, string>();
-            foreach (var p in SplitParam(param))
-            {
-                if (retdict.ContainsKey(p.Key))
-                    throw new InvalidOperationException();
-                retdict.Add(p.Key, p.Value);
-            }
-            return retdict;
-        }
-
-        /// <summary>
-        /// Split parameters and enumerate results
-        /// </summary>
-        protected IEnumerable<KeyValuePair<string, string>> SplitParam(string paramstring)
-        {
-            paramstring.TrimStart('?');
-            if (String.IsNullOrEmpty(paramstring))
-                yield break;
-            var parray = paramstring.Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var s in parray)
-            {
-                int idx = -1;
-                if ((idx = s.IndexOf('=')) >= 0)
-                {
-                    yield return new KeyValuePair<string, string>(
-                        s.Substring(0, idx), s.Substring(idx + 1));
-                }
-                else
-                {
-                    yield return new KeyValuePair<string, string>(s, String.Empty);
-                }
-            }
-        }
-
         #region Getting access token
 
         private string GetRequestToken()
         {
-            var reg = GetHeader(ProviderAccessTokenUrl, RequestMethod.GET, null);
+            var reg = GetHeader(ProviderRequestTokenUrl, RequestMethod.GET, null, gettingRequestToken: true);
             try
             {
-                var req = HttpWeb.CreateRequest(new Uri(ProviderRequestTokenUrl));
+                var req = HttpWeb.CreateRequest(new Uri(ProviderRequestTokenUrl), "GET");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 var ret = HttpWeb.WebConnectDownloadString(req);
                 if (ret.Exception != null)
@@ -439,9 +392,9 @@ namespace Std.Tweak.CredentialProviders
         const string VerifierKey = "oauth_verifier";
         #endregion
 
-        const string ProviderRequestTokenUrl = "http://api.twitter.com/oauth/request_token";
-        const string ProviderAccessTokenUrl = "http://api.twitter.com/oauth/access_token";
-        const string ProviderAuthorizeUrl = "http://api.twitter.com/oauth/authorize";
+        const string ProviderRequestTokenUrl = "https://api.twitter.com/oauth/request_token";
+        const string ProviderAccessTokenUrl = "https://api.twitter.com/oauth/access_token";
+        const string ProviderAuthorizeUrl = "https://api.twitter.com/oauth/authorize";
         const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
 
         public enum OAuthSignatureMethod
@@ -483,6 +436,23 @@ namespace Std.Tweak.CredentialProviders
 
         #region Algorithms
 
+        /// <summary>
+        /// Get Authentication header text
+        /// </summary>
+        protected string GetHeader(string uri, RequestMethod method, IEnumerable<KeyValuePair<string, string>> param, string pin = null, bool gettingRequestToken = false)
+        {
+            var oap = GetOAuthParams(
+                ConsumerKey, Token,
+                GetTimestamp(), GetNonce(),
+                SignatureMethod, pin, gettingRequestToken);
+            var sig = GetSignature(
+                new Uri(uri), ConsumerSecret, Secret,
+                JoinParamAsUrl(param == null ? oap : oap.Concat(param)),
+                SignatureMethod, method.ToString());
+            return JoinParamAsHeader(
+                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToArray());
+        }
+
         private string GetSignature(
             Uri uri, string consumerSecret, string tokenSecret,
             string joinedParam, OAuthSignatureMethod sigMethod,
@@ -508,6 +478,7 @@ namespace Std.Tweak.CredentialProviders
                     SigSource.Append(UrlEncode(regularUrl, Encoding.UTF8, true) + "&");
                     SigSource.Append(UrlEncode(joinedParam, Encoding.UTF8, true));
 
+                    System.Diagnostics.Debug.WriteLine("Signature source:" + SigSource.ToString());
                     // Calcuate hash
                     using (HMACSHA1 hmacsha1 = new HMACSHA1())
                     {
@@ -536,6 +507,48 @@ namespace Std.Tweak.CredentialProviders
 
         #region Utilities
 
+        /// <summary>
+        /// Split parameters into dictionary
+        /// </summary>
+        protected Dictionary<string, string> SplitParamDict(string param)
+        {
+            var retdict = new Dictionary<string, string>();
+            foreach (var p in SplitParam(param))
+            {
+                if (retdict.ContainsKey(p.Key))
+                    throw new InvalidOperationException();
+                retdict.Add(p.Key, p.Value);
+            }
+            return retdict;
+        }
+
+        /// <summary>
+        /// Split parameters and enumerate results
+        /// </summary>
+        protected IEnumerable<KeyValuePair<string, string>> SplitParam(string paramstring)
+        {
+            paramstring.TrimStart('?');
+            if (String.IsNullOrEmpty(paramstring))
+                yield break;
+            var parray = paramstring.Split(new[] { "&" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var s in parray)
+            {
+                int idx = -1;
+                if ((idx = s.IndexOf('=')) >= 0)
+                {
+                    yield return new KeyValuePair<string, string>(
+                        s.Substring(0, idx), s.Substring(idx + 1));
+                }
+                else
+                {
+                    yield return new KeyValuePair<string, string>(s, String.Empty);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Join parameters as header format
+        /// </summary>
         protected string JoinParamAsHeader(IEnumerable<KeyValuePair<string, string>> param)
         {
             if (param == null) return String.Empty;
@@ -544,6 +557,9 @@ namespace Std.Tweak.CredentialProviders
                                      select p.Key + "=\"" + p.Value + "\"");
         }
 
+        /// <summary>
+        /// Join parameters as url format
+        /// </summary>
         protected string JoinParamAsUrl(IEnumerable<KeyValuePair<string, string>> param)
         {
             if (param == null) return String.Empty;
@@ -552,8 +568,9 @@ namespace Std.Tweak.CredentialProviders
                                     select p.Key + "=" + p.Value);
         }
 
-        private IEnumerable<KeyValuePair<string, string>> GetOAuthParams
-            (string consumerKey, string token, string timeStamp, string nonce, OAuthSignatureMethod sigMethod, string verifier)
+        private IEnumerable<KeyValuePair<string, string>> GetOAuthParams(
+            string consumerKey, string token, string timeStamp, string nonce,
+            OAuthSignatureMethod sigMethod, string verifier, bool gettingRequestToken)
         {
             if (String.IsNullOrEmpty(consumerKey))
                 throw new ArgumentNullException("consumerKey");
@@ -566,11 +583,12 @@ namespace Std.Tweak.CredentialProviders
             np.Add(new KeyValuePair<string, string>(ConsumerKeyKey, consumerKey));
             if (!String.IsNullOrEmpty(verifier))
                 np.Add(new KeyValuePair<string, string>(VerifierKey, verifier));
-            if (!String.IsNullOrEmpty(token))
+            if (gettingRequestToken)
+                np.Add(new KeyValuePair<string, string>(CallbackKey, "oob")); // out of band
+            else if (!String.IsNullOrEmpty(token))
                 np.Add(new KeyValuePair<string, string>(TokenKey, token));
             return np;
         }
-
 
         private string ComputeHash(HashAlgorithm algorithm, string raw)
         {
