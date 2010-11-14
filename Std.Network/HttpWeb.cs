@@ -135,7 +135,7 @@ namespace Std.Network
         /// <returns>request</returns>
         public static HttpWebRequest CreateRequest(
             Uri uri, string method = "GET",
-            string contentType = "application/x-www-form-urlencoded",
+            string contentType = null,
             ICredentials credential = null)
         {
             if (uri == null)
@@ -431,10 +431,10 @@ namespace Std.Network
         /// Connect specified uri and download string
         /// </summary>
         public static OperationResult<string> WebConnectDownloadString(
-            Uri uri, string method = "GET", ICredentials credential = null)
+            Uri uri, string method = "GET", ICredentials credential = null, string contentType = null)
         {
             return WebConnectDownloadString(
-                CreateRequest(uri, method, credential: credential));
+                CreateRequest(uri, method, credential: credential, contentType: contentType));
         }
 
     }

@@ -37,7 +37,7 @@ namespace Std.Tweak.ThirdParty
         /// </summary>
         public static XDocument UploadToTwitpic(this CredentialProviders.OAuth provider, string apiKey, string message, string mediaFilePath)
         {
-            var req = HttpWeb.CreateRequest(new Uri(UploadApiUrl), "POST");
+            var req = HttpWeb.CreateRequest(new Uri(UploadApiUrl), "POST", contentType: "application/x-www-form-urlencoded");
 
             // use OAuth Echo
             provider.MakeOAuthEchoRequest(ref req);
@@ -63,7 +63,7 @@ namespace Std.Tweak.ThirdParty
         public static XDocument GetDetail(string id)
         {
             var dat = HttpWeb.WebConnect<XDocument>(
-                HttpWeb.CreateRequest(new Uri(String.Format(MediaShowUrl, id))),
+                HttpWeb.CreateRequest(new Uri(String.Format(MediaShowUrl, id)), contentType: "application/x-www-form-urlencoded"),
                 HttpWeb.StreamConverters.ReadXml);
             if (dat.Exception != null)
                 throw dat.Exception;

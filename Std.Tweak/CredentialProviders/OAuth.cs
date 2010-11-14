@@ -75,16 +75,15 @@ namespace Std.Tweak.CredentialProviders
             try
             {
                 var ps = JoinParamAsUrl(param);
-                if (method == RequestMethod.GET && !String.IsNullOrWhiteSpace(ps))
-                {
-                    target += "?" + ps;
-                }
                 byte[] body = null;
-                if (method == RequestMethod.POST && !String.IsNullOrWhiteSpace(ps))
+                if (!String.IsNullOrWhiteSpace(ps))
                 {
-                    body = Encoding.ASCII.GetBytes(ps);
+                    if (method == RequestMethod.GET)
+                        target += "?" + ps;
+                    if (method == RequestMethod.POST)
+                        body = Encoding.ASCII.GetBytes(ps);
                 }
-                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString());
+                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString(), contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 var ret = HttpWeb.WebConnect<XDocument>(req,
                     responseconv: new HttpWeb.ResponseConverter<XDocument>((res) =>
@@ -170,7 +169,7 @@ namespace Std.Tweak.CredentialProviders
                     target += "?" + ps;
                 }
 
-                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString());
+                var req = HttpWeb.CreateRequest(new Uri(target), method.ToString(), contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 req.Timeout = 8000;
 
@@ -267,7 +266,7 @@ namespace Std.Tweak.CredentialProviders
             var reg = GetHeader(ProviderRequestTokenUrl, RequestMethod.GET, null, gettingRequestToken: true);
             try
             {
-                var req = HttpWeb.CreateRequest(new Uri(ProviderRequestTokenUrl), "GET");
+                var req = HttpWeb.CreateRequest(new Uri(ProviderRequestTokenUrl), "GET", contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 var ret = HttpWeb.WebConnectDownloadString(req);
                 if (ret.Exception != null)
@@ -328,7 +327,7 @@ namespace Std.Tweak.CredentialProviders
             var reg = GetHeader(ProviderAccessTokenUrl, RequestMethod.GET, null, pin);
             try
             {
-                var req = HttpWeb.CreateRequest(new Uri(ProviderAccessTokenUrl));
+                var req = HttpWeb.CreateRequest(new Uri(ProviderAccessTokenUrl), contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 var ret = HttpWeb.WebConnectDownloadString(req);
                 if (ret.Exception != null)
@@ -450,7 +449,7 @@ namespace Std.Tweak.CredentialProviders
                 JoinParamAsUrl(param == null ? oap : oap.Concat(param)),
                 SignatureMethod, method.ToString());
             return JoinParamAsHeader(
-                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToArray());
+                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToList());
         }
 
         private string GetSignature(
@@ -464,7 +463,7 @@ namespace Std.Tweak.CredentialProviders
                     return HttpUtility.UrlEncode(consumerSecret + "&" + tokenSecret);
                 case OAuthSignatureMethod.Hmac_Sha1:
                     if (String.IsNullOrEmpty(requestMethod))
-                        throw new ArgumentNullException("httpMethod");
+                        throw new ArgumentNullException("requestMethod");
 
                     // formatting URI
                     var regularUrl = uri.Scheme + "://" + uri.Host;
@@ -478,7 +477,6 @@ namespace Std.Tweak.CredentialProviders
                     SigSource.Append(UrlEncode(regularUrl, Encoding.UTF8, true) + "&");
                     SigSource.Append(UrlEncode(joinedParam, Encoding.UTF8, true));
 
-                    System.Diagnostics.Debug.WriteLine("Signature source:" + SigSource.ToString());
                     // Calcuate hash
                     using (HMACSHA1 hmacsha1 = new HMACSHA1())
                     {

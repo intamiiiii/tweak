@@ -45,7 +45,7 @@ namespace Std.Tweak.CredentialProviders
             var head = GetHeader(xAuthProviderAccessTokenUrl, RequestMethod.POST, para);
             try
             {
-                var req = HttpWeb.CreateRequest(new Uri(xAuthProviderAccessTokenUrl + "?" + JoinParamAsUrl(para)), "POST");
+                var req = HttpWeb.CreateRequest(new Uri(xAuthProviderAccessTokenUrl + "?" + JoinParamAsUrl(para)), "POST", contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + head);
                 var ret = HttpWeb.WebConnectDownloadString(req);
                 if (ret.Exception != null)

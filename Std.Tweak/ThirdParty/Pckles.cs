@@ -40,7 +40,7 @@ namespace Std.Tweak.ThirdParty
         public static XDocument UploadToPckles(this CredentialProviders.OAuth provider, string apiKey, string message,
             string mediaFilePath)
         {
-            var req = HttpWeb.CreateRequest(new Uri(UploadApiUrl), "POST");
+            var req = HttpWeb.CreateRequest(new Uri(UploadApiUrl), "POST", contentType: "application/x-www-form-urlencoded");
 
             // use OAuth Echo
             provider.MakeOAuthEchoRequest(ref req);
