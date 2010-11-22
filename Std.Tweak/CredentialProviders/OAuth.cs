@@ -164,16 +164,20 @@ namespace Std.Tweak.CredentialProviders
             try
             {
                 var ps = JoinParamAsUrl(param);
+                System.Diagnostics.Debug.WriteLine("streaming params:" + ps);
+                byte[] body = null;
                 if (!String.IsNullOrWhiteSpace(ps))
                 {
-                    target += "?" + ps;
+                    if (method == RequestMethod.GET)
+                        target += "?" + ps;
+                    if (method == RequestMethod.POST)
+                        body = Encoding.ASCII.GetBytes(ps);
                 }
-
                 var req = HttpWeb.CreateRequest(new Uri(target), method.ToString(), contentType: "application/x-www-form-urlencoded");
                 req.Headers.Add("Authorization", "OAuth " + reg);
                 req.Timeout = 8000;
 
-                var ret = HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream);
+                var ret = HttpWeb.WebConnect<Stream>(req: req, responseconv: HttpWeb.ResponseConverters.GetStream, senddata: body);
                 if (ret.Succeeded && ret.Data != null)
                 {
                     return ret.Data;

@@ -71,11 +71,11 @@ namespace Std.Tweak.Streaming
             if (count != null)
                 args.Add(new KeyValuePair<string, string>("count", count.Value.ToString()));
             if (!String.IsNullOrWhiteSpace(follow))
-                args.Add(new KeyValuePair<string, string>("follow", follow));
+                args.Add(new KeyValuePair<string, string>("follow", Tweak.CredentialProviders.OAuth.UrlEncode(follow, Encoding.UTF8, true)));
             if (!String.IsNullOrWhiteSpace(track))
-                args.Add(new KeyValuePair<string, string>("track", track));
+                args.Add(new KeyValuePair<string, string>("track", Tweak.CredentialProviders.OAuth.UrlEncode(track, Encoding.UTF8, true)));
             if (!String.IsNullOrWhiteSpace(locations))
-                args.Add(new KeyValuePair<string, string>("locations", locations));
+                args.Add(new KeyValuePair<string, string>("locations", Tweak.CredentialProviders.OAuth.UrlEncode(locations, Encoding.UTF8, true)));
 
             var strm = provider.RequestStreamingAPI(GetStreamingUri(type), reqmethod, args);
             if (strm != null)
@@ -254,6 +254,7 @@ namespace Std.Tweak.Streaming
                     }
                 }
             }
+            catch (ThreadAbortException) { }
             catch (Exception e)
             {
                 // On disconnecting, catch "IOException", but this exception can ignore.
