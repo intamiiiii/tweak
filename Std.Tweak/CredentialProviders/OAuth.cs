@@ -400,6 +400,9 @@ namespace Std.Tweak.CredentialProviders
         const string ProviderAuthorizeUrl = "https://api.twitter.com/oauth/authorize";
         const string ProviderEchoAuthorizeUrl = "https://api.twitter.com/1/account/verify_credentials.json";
 
+        /// <summary>
+        /// Signature method for OAuth
+        /// </summary>
         public enum OAuthSignatureMethod
         {
             /// <summary>
