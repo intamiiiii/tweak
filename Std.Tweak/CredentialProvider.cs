@@ -5,6 +5,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Std.Network;
 using System.IO;
+using System.Xml.Serialization;
 
 namespace Std.Tweak
 {
@@ -16,16 +17,19 @@ namespace Std.Tweak
         /// <summary>
         /// API rate limit descriptor
         /// </summary>
+        [XmlIgnore()]
         public int RateLimitMax { get; protected set; }
 
         /// <summary>
         /// API rate limit remaining
         /// </summary>
+        [XmlIgnore()]
         public int RateLimitRemaining { get; protected set; }
 
         /// <summary>
         /// API rate limit reset date-time
         /// </summary>
+        [XmlIgnore()]
         public DateTime RateLimitReset { get; protected set; }
 
         /// <summary>

@@ -70,7 +70,6 @@ namespace Std.Tweak.CredentialProviders
             {
                 throw new Exceptions.OAuthNotValidatedException();
             }
-
             var reg = GetHeader(target, method, param);
             try
             {
@@ -456,7 +455,7 @@ namespace Std.Tweak.CredentialProviders
                 JoinParamAsUrl(param == null ? oap : oap.Concat(param)),
                 SignatureMethod, method.ToString());
             return JoinParamAsHeader(
-                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToList());
+                oap.Concat(new[] { new KeyValuePair<string, string>(SignatureKey, sig) }).ToArray());
         }
 
         private string GetSignature(

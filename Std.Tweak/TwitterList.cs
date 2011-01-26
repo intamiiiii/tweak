@@ -122,6 +122,8 @@ namespace Std.Tweak
         /// <param name="members">users collection</param>
         public void SetUsers(IEnumerable<TwitterUser> members)
         {
+            if (members == null)
+                throw new ArgumentNullException("members");
             this.Members = members.ToArray();
         }
 

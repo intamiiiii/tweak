@@ -171,6 +171,8 @@ namespace Std.Tweak.Streaming
             ///   delimited: data length(byte)<para/>
             ///   track: tracking keyword(each keywords max 60 bytes, separated comma.)<para/>
             ///   locations: location area of tweet<para/>
+            ///   replies: if you set this parameter as &quot;all&quot; twitter deriver all mentions of followings.<para />
+            ///   with: if you set this parameter as user, twitter deriver limited events. See API document.
             /// </summary>
             user
         }

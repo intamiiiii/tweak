@@ -22,6 +22,24 @@ namespace Std.Tweak.Streaming
         /// <summary>
         /// Create TwitterStreamingElement
         /// </summary>
+        public TwitterStreamingElement(TwitterStatusBase tbase)
+        {
+            this.Status = tbase;
+            this.SourceUser = tbase.User;
+            var tstatus = tbase as TwitterStatus;
+            if (tstatus != null)
+            {
+                this.Kind = ElementKind.Status;
+            }
+            else
+            {
+                this.Kind = ElementKind.DirectMessage;
+            }
+        }
+
+        /// <summary>
+        /// Create TwitterStreamingElement
+        /// </summary>
         public TwitterStreamingElement(TwitterStatus tstatus)
         {
             this.Kind = ElementKind.Status;
@@ -36,6 +54,7 @@ namespace Std.Tweak.Streaming
         {
             this.Kind = ElementKind.DirectMessage;
             this.Status = dmsg;
+            this.SourceUser = dmsg.User;
         }
 
         /// <summary>
