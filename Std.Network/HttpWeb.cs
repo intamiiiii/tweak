@@ -15,6 +15,12 @@ namespace Std.Network
     /// </summary>
     public static class HttpWeb
     {
+        static HttpWeb()
+        {
+            // 100 continue <- false
+            Expect100Continue = false;
+        }
+
         static string userAgentString = "Std/HttpLib 2.1(.net framework 4.0)";
 
         /// <summary>
@@ -37,15 +43,19 @@ namespace Std.Network
             set { timeoutInterval = value; }
         }
 
-        static bool expect100continue = false;
-
         /// <summary>
         /// Use expect100continue
         /// </summary>j
         public static bool Expect100Continue
         {
-            get { return expect100continue; }
-            set { expect100continue = value; }
+            get { return ServicePointManager.Expect100Continue; }
+            set { ServicePointManager.Expect100Continue = value; }
+        }
+
+        public static int MaxConnectionLimit
+        {
+            get { return ServicePointManager.DefaultConnectionLimit; }
+            set { ServicePointManager.DefaultConnectionLimit = value; }
         }
 
         #region Converter delegate definitions and common converters
@@ -155,7 +165,6 @@ namespace Std.Network
             }
 
             // set parameters
-            req.ServicePoint.Expect100Continue = expect100continue;
             req.UserAgent = userAgentString;
             req.Timeout = timeoutInterval;
             req.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;

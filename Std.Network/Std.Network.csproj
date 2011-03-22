@@ -54,7 +54,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Http.cs" />
     <Compile Include="HttpUtility.cs" />
     <Compile Include="HttpWeb.cs" />
     <Compile Include="OperationResult.cs" />

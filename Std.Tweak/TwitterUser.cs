@@ -106,6 +106,12 @@ namespace Std.Tweak
 
             this.ListedCount = uNode.Element("listed_count").ParseLong();
 
+            if (uNode.Element("status") != null)
+            {
+                this.LastTweeted = uNode.Element("status").Element("created_at").ParseDateTime("ddd MMM d HH':'mm':'ss zzz yyyy");
+                this.LastTweetText = uNode.Element("status").Element("text").ParseString();
+            }
+
             this.Profile = new ProfileInformation()
             {
                 BackgroundColor = uNode.Element("profile_background_color").ParseColor(),
@@ -314,6 +320,14 @@ namespace Std.Tweak
         /// </summary>
         public object Tag { get; set; }
 
-    }
+        /// <summary>
+        /// Last tweeted DateTime
+        /// </summary>
+        public DateTime LastTweeted { get; set; }
 
+        /// <summary>
+        /// Last tweeted text
+        /// </summary>
+        public string LastTweetText { get; set; }
+    }
 }

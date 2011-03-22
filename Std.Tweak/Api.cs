@@ -62,7 +62,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get timeline with full parameters
         /// </summary>
-        private static IEnumerable<TwitterStatus> GetTimeline(this CredentialProvider provider, string partialUri, long? sinceId, long? maxId, long? count, long? page, string userId, string screenName)
+        private static IEnumerable<TwitterStatus> GetTimeline(this CredentialProvider provider, string partialUri, long? sinceId, long? maxId, long? count, long? page, long? userId, string screenName)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (sinceId != null && sinceId.HasValue)
@@ -77,7 +77,7 @@ namespace Std.Tweak
             if (page != null)
                 para.Add(new KeyValuePair<string, string>("page", page.ToString()));
 
-            if (!String.IsNullOrEmpty(userId))
+            if (userId != null)
                 para.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
 
             if (!String.IsNullOrEmpty(screenName))
@@ -400,7 +400,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get user with full params
         /// </summary>
-        private static TwitterUser GetUser(this CredentialProvider provider, string partialUri, CredentialProvider.RequestMethod method, string userId, string screenName)
+        private static TwitterUser GetUser(this CredentialProvider provider, string partialUri, CredentialProvider.RequestMethod method, long? userId, string screenName)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (userId != null)
@@ -422,7 +422,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static TwitterUser GetUser(this CredentialProvider provider, string userId)
+        public static TwitterUser GetUser(this CredentialProvider provider, long userId)
         {
             return provider.GetUser("users/show.xml", CredentialProvider.RequestMethod.GET, userId, null);
         }
@@ -467,7 +467,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get users with full params
         /// </summary>
-        private static IEnumerable<TwitterUser> GetUsers(this CredentialProvider provider, string partialUri, string userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
+        private static IEnumerable<TwitterUser> GetUsers(this CredentialProvider provider, string partialUri, long? userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
         {
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
             if (userId != null)
@@ -488,7 +488,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get users with use cursor params
         /// </summary>
-        private static IEnumerable<TwitterUser> GetUsersAll(this CredentialProvider provider, string partialUri, string userId, string screenName)
+        private static IEnumerable<TwitterUser> GetUsersAll(this CredentialProvider provider, string partialUri, long? userId, string screenName)
         {
             long n_cursor = -1;
             long c_cursor = -1;
@@ -508,7 +508,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterUser> GetFriendsAll(this CredentialProvider provider, string userId = null)
+        public static IEnumerable<TwitterUser> GetFriendsAll(this CredentialProvider provider, long? userId = null)
         {
             return provider.GetUsersAll("statuses/friends.xml", userId, null);
         }
@@ -526,7 +526,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get friends with full params
         /// </summary>
-        public static IEnumerable<TwitterUser> GetFriends(this CredentialProvider provider, string userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterUser> GetFriends(this CredentialProvider provider, long? userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
         {
             if (cursor == null)
                 cursor = -1;
@@ -538,7 +538,7 @@ namespace Std.Tweak
         /// </summary>
         /// <param name="provider">credential provider</param>
         /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterUser> GetFollowersAll(this CredentialProvider provider, string userId = null)
+        public static IEnumerable<TwitterUser> GetFollowersAll(this CredentialProvider provider, long? userId = null)
         {
             return provider.GetUsersAll("statuses/followers.xml", userId, null);
         }
@@ -556,7 +556,7 @@ namespace Std.Tweak
         /// <summary>
         /// Get followers with full params
         /// </summary>
-        public static IEnumerable<TwitterUser> GetFollowers(this CredentialProvider provider, string userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterUser> GetFollowers(this CredentialProvider provider, long? userId, string screenName, long? cursor, out long prevCursor, out long nextCursor)
         {
             return provider.GetUsers("statuses/followers.xml", userId, screenName, cursor, out prevCursor, out nextCursor);
         }
@@ -590,13 +590,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser CreateFriendship(this CredentialProvider provider, string userId = null, string screenName = null, bool follow = false)
+        public static TwitterUser CreateFriendship(this CredentialProvider provider, long? userId = null, string screenName = null, bool follow = false)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             if (follow)
@@ -632,13 +632,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser DestroyFriendship(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser DestroyFriendship(this CredentialProvider provider, long? userId = null, string screenName = null)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             var ret = provider.RequestAPIv1("friendships/destroy.xml", CredentialProvider.RequestMethod.POST, arg);
@@ -725,13 +725,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser CreateBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser CreateBlockUser(this CredentialProvider provider, long? userId = null, string screenName = null)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             var ret = provider.RequestAPIv1("blocks/create.xml", CredentialProvider.RequestMethod.POST, arg);
@@ -764,13 +764,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser DestroyBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser DestroyBlockUser(this CredentialProvider provider, long? userId = null, string screenName = null)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             var ret = provider.RequestAPIv1("blocks/destroy.xml", CredentialProvider.RequestMethod.POST, arg);
@@ -803,13 +803,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser ExistsBlockUser(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser ExistsBlockUser(this CredentialProvider provider, long? userId = null, string screenName = null)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             var ret = provider.RequestAPIv1("blocks/exists.xml", CredentialProvider.RequestMethod.POST, arg);
@@ -892,13 +892,13 @@ namespace Std.Tweak
         /// <remarks>
         /// user id or user screeen name must set.
         /// </remarks>
-        public static TwitterUser ReportSpam(this CredentialProvider provider, string userId = null, string screenName = null)
+        public static TwitterUser ReportSpam(this CredentialProvider provider, long? userId = null, string screenName = null)
         {
-            if (String.IsNullOrEmpty(userId) && String.IsNullOrEmpty(screenName))
+            if (userId == null && String.IsNullOrEmpty(screenName))
                 throw new ArgumentException("User id or screen name is must set.");
             List<KeyValuePair<string, string>> arg = new List<KeyValuePair<string, string>>();
-            if (!String.IsNullOrEmpty(userId))
-                arg.Add(new KeyValuePair<string, string>("user_id", userId));
+            if (userId != null)
+                arg.Add(new KeyValuePair<string, string>("user_id", userId.ToString()));
             if (!String.IsNullOrEmpty(screenName))
                 arg.Add(new KeyValuePair<string, string>("screen_name", screenName));
             var ret = provider.RequestAPIv1("blocks/create.xml", CredentialProvider.RequestMethod.POST, arg);
@@ -955,20 +955,20 @@ namespace Std.Tweak
         /// Get list statuses
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">list owner user id</param>
+        /// <param name="userScreenName">list owner user id</param>
         /// <param name="listId">list id</param>
-        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userId, string listId)
+        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userScreenName, string listId)
         {
-            return provider.GetListStatuses(userId, listId, null, null, null, null);
+            return provider.GetListStatuses(userScreenName, listId, null, null, null, null);
         }
 
         /// <summary>
         /// Get list statuses with full params
         /// </summary>
-        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userId, string listId, string sinceId = null, string maxId = null, long? perPage = null, long? page = null)
+        public static IEnumerable<TwitterStatus> GetListStatuses(this CredentialProvider provider, string userScreenName, string listId, string sinceId = null, string maxId = null, long? perPage = null, long? page = null)
         {
             listId = listId.Replace("_", "-");
-            var partialUri = userId + "/lists/" + listId + "/statuses.xml";
+            var partialUri = userScreenName + "/lists/" + listId + "/statuses.xml";
 
             List<KeyValuePair<string, string>> para = new List<KeyValuePair<string, string>>();
 
@@ -991,46 +991,46 @@ namespace Std.Tweak
         /// Get list members
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">list owner user's id</param>
+        /// <param name="userScreenName">list owner user's id</param>
         /// <param name="listId">list id</param>
-        public static IEnumerable<TwitterUser> GetListMembersAll(this CredentialProvider provider, string userId, string listId)
+        public static IEnumerable<TwitterUser> GetListMembersAll(this CredentialProvider provider, string userScreenName, string listId)
         {
             listId = listId.Replace("_", "-");
-            return provider.GetUsersAll(userId + "/" + listId + "/members.xml", null, null);
+            return provider.GetUsersAll(userScreenName + "/" + listId + "/members.xml", null, null);
         }
 
         /// <summary>
         /// Get list members with full params
         /// </summary>
-        public static IEnumerable<TwitterUser> GetListMembers(this CredentialProvider provider, string userId, string listId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterUser> GetListMembers(this CredentialProvider provider, string userScreenName, string listId, long? cursor, out long prevCursor, out long nextCursor)
         {
             if (cursor == null)
                 cursor = -1;
             listId = listId.Replace("_", "-");
-            return provider.GetUsers(userId + "/" + listId + "/members.xml", null, null, cursor, out prevCursor, out nextCursor);
+            return provider.GetUsers(userScreenName + "/" + listId + "/members.xml", null, null, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
         /// Get list subscribers with full params
         /// </summary>
-        public static IEnumerable<TwitterUser> GetListSubscribers(this CredentialProvider provider, string userId, string listId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterUser> GetListSubscribers(this CredentialProvider provider, string userScreenName, string listId, long? cursor, out long prevCursor, out long nextCursor)
         {
             if (cursor == null)
                 cursor = -1;
             listId = listId.Replace("_", "-");
-            return provider.GetUsers(userId + "/" + listId + "/subscribers.xml", null, null, cursor, out prevCursor, out nextCursor);
+            return provider.GetUsers(userScreenName + "/" + listId + "/subscribers.xml", null, null, cursor, out prevCursor, out nextCursor);
         }
 
         /// <summary>
         /// Get list subscribers
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">list owner user's id</param>
+        /// <param name="userScreenName">list owner user's id</param>
         /// <param name="listId">list id</param>
-        public static IEnumerable<TwitterUser> GetListSubscribersAll(this CredentialProvider provider, string userId, string listId)
+        public static IEnumerable<TwitterUser> GetListSubscribersAll(this CredentialProvider provider, string userScreenName, string listId)
         {
             listId = listId.Replace("_", "-");
-            return provider.GetUsersAll(userId + "/" + listId + "/subscribers.xml", null, null);
+            return provider.GetUsersAll(userScreenName + "/" + listId + "/subscribers.xml", null, null);
         }
 
         /// <summary>
@@ -1090,21 +1090,21 @@ namespace Std.Tweak
         /// Get lists you following
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetFollowingListsAll(this CredentialProvider provider, string userId)
+        /// <param name="userScreenName">target user id</param>
+        public static IEnumerable<TwitterList> GetFollowingListsAll(this CredentialProvider provider, string userScreenName)
         {
-            foreach (var l in provider.GetUserListsAll(userId))
+            foreach (var l in provider.GetUserListsAll(userScreenName))
                 yield return l;
-            foreach (var l in provider.GetSubscribedListsAll(userId))
+            foreach (var l in provider.GetSubscribedListsAll(userScreenName))
                 yield return l;
         }
 
         /// <summary>
         /// Get lists someone created with full params
         /// </summary>
-        public static IEnumerable<TwitterList> GetUserLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterList> GetUserLists(this CredentialProvider provider, string userScreenName, long? cursor, out long prevCursor, out long nextCursor)
         {
-            var partialUri = userId + "/lists.xml";
+            var partialUri = userScreenName + "/lists.xml";
             return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
@@ -1112,19 +1112,19 @@ namespace Std.Tweak
         /// Get all lists someone created
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetUserListsAll(this CredentialProvider provider, string userId)
+        /// <param name="userScreenName">target user id</param>
+        public static IEnumerable<TwitterList> GetUserListsAll(this CredentialProvider provider, string userScreenName)
         {
-            var partialUri = userId + "/lists.xml";
+            var partialUri = userScreenName + "/lists.xml";
             return provider.GetListsAll(partialUri);
         }
 
         /// <summary>
         /// Get lists which member contains someone with full params
         /// </summary>
-        public static IEnumerable<TwitterList> GetMembershipLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterList> GetMembershipLists(this CredentialProvider provider, string userScreenName, long? cursor, out long prevCursor, out long nextCursor)
         {
-            var partialUri = userId + "/lists/memberships.xml";
+            var partialUri = userScreenName + "/lists/memberships.xml";
             return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
@@ -1132,19 +1132,19 @@ namespace Std.Tweak
         /// Get all lists which member contains someone
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetMembershipListsAll(this CredentialProvider provider, string userId)
+        /// <param name="userScreenName">target user id</param>
+        public static IEnumerable<TwitterList> GetMembershipListsAll(this CredentialProvider provider, string userScreenName)
         {
-            var partialUri = userId + "/lists/memberships.xml";
+            var partialUri = userScreenName + "/lists/memberships.xml";
             return provider.GetListsAll(partialUri);
         }
 
         /// <summary>
         /// Get lists someone subscribed with full params
         /// </summary>
-        public static IEnumerable<TwitterList> GetSubscribedLists(this CredentialProvider provider, string userId, long? cursor, out long prevCursor, out long nextCursor)
+        public static IEnumerable<TwitterList> GetSubscribedLists(this CredentialProvider provider, string userScreenName, long? cursor, out long prevCursor, out long nextCursor)
         {
-            var partialUri = userId + "/lists/subscriptions.xml";
+            var partialUri = userScreenName + "/lists/subscriptions.xml";
             return provider.GetLists(partialUri, cursor, out prevCursor, out nextCursor);
         }
 
@@ -1152,10 +1152,10 @@ namespace Std.Tweak
         /// Get lists all someone subscribed
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">target user id</param>
-        public static IEnumerable<TwitterList> GetSubscribedListsAll(this CredentialProvider provider, string userId)
+        /// <param name="userScreenName">target user id</param>
+        public static IEnumerable<TwitterList> GetSubscribedListsAll(this CredentialProvider provider, string userScreenName)
         {
-            var partialUri = userId + "/lists/subscriptions.xml";
+            var partialUri = userScreenName + "/lists/subscriptions.xml";
             return provider.GetListsAll(partialUri);
         }
 
@@ -1163,11 +1163,11 @@ namespace Std.Tweak
         /// Get single list data
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">list owner user's id</param>
+        /// <param name="userScreenName">list owner user's id</param>
         /// <param name="listId">list is</param>
-        public static TwitterList GetList(this CredentialProvider provider, string userId, string listId)
+        public static TwitterList GetList(this CredentialProvider provider, string userScreenName, string listId)
         {
-            var list = provider.RequestAPIv1(userId + "/lists/" + listId + ".xml",
+            var list = provider.RequestAPIv1(userScreenName + "/lists/" + listId + ".xml",
                  CredentialProvider.RequestMethod.GET, null).Element("list");
             if (list != null)
                 return TwitterList.CreateByNode(list);
@@ -1228,13 +1228,13 @@ namespace Std.Tweak
         /// Delete list you created
         /// </summary>
         /// <param name="provider">credential provider</param>
-        /// <param name="userId">your id</param>
+        /// <param name="userScreenName">your id</param>
         /// <param name="listId">list id</param>
-        public static TwitterList DeleteList(this CredentialProvider provider, string userId, string listId)
+        public static TwitterList DeleteList(this CredentialProvider provider, string userScreenName, string listId)
         {
             var kvp = new[] { new KeyValuePair<string, string>("_method", "DELETE") };
             var list = provider.RequestAPIv1(
-                 userId + "/lists/" + listId + ".xml",
+                 userScreenName + "/lists/" + listId + ".xml",
                   CredentialProvider.RequestMethod.POST,
                   kvp).Element("list");
             if (list != null)
@@ -1249,10 +1249,10 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         /// <param name="yourScreenName">your screen name</param>
         /// <param name="listId">list id</param>
-        /// <param name="addUser">adding user id or screen name</param>
-        public static TwitterList AddUserIntoList(this CredentialProvider provider, string yourScreenName, string listId, string addUser)
+        /// <param name="addUserScreenName">adding user id or screen name</param>
+        public static TwitterList AddUserIntoList(this CredentialProvider provider, string yourScreenName, string listId, string addUserScreenName)
         {
-            var kvp = new[] { new KeyValuePair<string, string>("id", addUser) };
+            var kvp = new[] { new KeyValuePair<string, string>("id", addUserScreenName) };
             var list = provider.RequestAPIv1(
                 yourScreenName + "/" + listId + ".xml",
                 CredentialProvider.RequestMethod.POST,
@@ -1269,10 +1269,10 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         /// <param name="yourScreenName">your screen name</param>
         /// <param name="listId">list id</param>
-        /// <param name="deleteUserId">deleting user id</param>
-        public static TwitterList DeleteUserFromList(this CredentialProvider provider, string yourScreenName, string listId, string deleteUserId)
+        /// <param name="deleteUserScreenName">deleting user id</param>
+        public static TwitterList DeleteUserFromList(this CredentialProvider provider, string yourScreenName, string listId, string deleteUserScreenName)
         {
-            var kvp = new[] { new KeyValuePair<string, string>("id", deleteUserId), new KeyValuePair<string, string>("_method", "DELETE") };
+            var kvp = new[] { new KeyValuePair<string, string>("id", deleteUserScreenName), new KeyValuePair<string, string>("_method", "DELETE") };
             var list = provider.RequestAPIv1(
                 yourScreenName + "/" + listId + ".xml",
                 CredentialProvider.RequestMethod.POST,
@@ -1290,11 +1290,11 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         /// <param name="user">list owner user id or screen name</param>
         /// <param name="listId">list id</param>
-        /// <param name="queryUserId">query user id</param>
-        public static TwitterUser GetListMember(this CredentialProvider provider, string user, string listId, string queryUserId)
+        /// <param name="queryUserScreenName">query user id</param>
+        public static TwitterUser GetListMember(this CredentialProvider provider, string user, string listId, string queryUserScreenName)
         {
             var query = provider.RequestAPIv1(
-                user + "/" + listId + "/members/" + queryUserId + ".xml",
+                user + "/" + listId + "/members/" + queryUserScreenName + ".xml",
                 CredentialProvider.RequestMethod.GET, null).Element("user");
             if (user != null)
                 return TwitterUser.CreateByNode(query);
@@ -1344,11 +1344,11 @@ namespace Std.Tweak
         /// <param name="provider">credential provider</param>
         /// <param name="screenName">list owner user id</param>
         /// <param name="listId">list id</param>
-        /// <param name="queryUserId">query user id</param>
-        public static TwitterUser GetListSubscriber(this CredentialProvider provider, string screenName, string listId, string queryUserId)
+        /// <param name="queryUserScreenName">query user id</param>
+        public static TwitterUser GetListSubscriber(this CredentialProvider provider, string screenName, string listId, string queryUserScreenName)
         {
             var query = provider.RequestAPIv1(
-                screenName + "/" + listId + "/subscribers/" + queryUserId + ".xml",
+                screenName + "/" + listId + "/subscribers/" + queryUserScreenName + ".xml",
                 CredentialProvider.RequestMethod.GET, null).Element("user");
             if (query != null)
                 return TwitterUser.CreateByNode(query);

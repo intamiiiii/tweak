@@ -73,7 +73,7 @@ namespace Std.Tweak
         /// <summary>
         /// Members enumerator
         /// </summary>
-        public TwitterUser[] Members { get; set; }
+        public TwitterUser[] Members { get; private set; }
 
         /// <summary>
         /// Twitter list instance from XML nodes
@@ -128,6 +128,14 @@ namespace Std.Tweak
         }
 
         /// <summary>
+        /// メンバコレクションをnullにセットします
+        /// </summary>
+        public void InitUsers()
+        {
+            this.Members = null;
+        }
+
+        /// <summary>
         /// Get list id
         /// </summary>
         public static string GetListId(XElement node)
@@ -170,5 +178,13 @@ namespace Std.Tweak
         /// Common object holder
         /// </summary>
         public object Tag { get; set; }
+
+        /// <summary>
+        /// リスト名の比較を行います。
+        /// </summary>
+        public bool CompareListName(string name)
+        {
+            return this.Name.ToLower().Replace('_', '-').Equals(name.ToLower().Replace('_', '-'));
+        }
     }
 }

@@ -27,10 +27,11 @@ namespace Std.Tweak.Streaming
         /// <param name="follow">following user's id</param>
         /// <param name="track">tracking keywords</param>
         /// <param name="locations">location area of tweet</param>
+        /// <param name="repliesAll">use @replies=all option</param>
         public static StreamingController BeginStreaming
             (CredentialProvider provider, StreamingType type,
             int? delimitered = null, int? count = null,
-            string follow = null, string track = null, string locations = null)
+            string follow = null, string track = null, string locations = null, bool repliesAll = false)
         {
             CredentialProvider.RequestMethod reqmethod = CredentialProvider.RequestMethod.GET;
             // argument check
@@ -76,7 +77,8 @@ namespace Std.Tweak.Streaming
                 args.Add(new KeyValuePair<string, string>("track", Tweak.CredentialProviders.OAuth.UrlEncode(track, Encoding.UTF8, true)));
             if (!String.IsNullOrWhiteSpace(locations))
                 args.Add(new KeyValuePair<string, string>("locations", Tweak.CredentialProviders.OAuth.UrlEncode(locations, Encoding.UTF8, true)));
-
+            if (repliesAll)
+                args.Add(new KeyValuePair<string, string>("replies", "all"));
             var strm = provider.RequestStreamingAPI(GetStreamingUri(type), reqmethod, args);
             if (strm != null)
                 return new StreamingController(strm);
@@ -84,9 +86,13 @@ namespace Std.Tweak.Streaming
                 return null;
         }
 
+        private Stream currentReceivingStream;
+
         private StreamingController(Stream stream)
         {
             Disposed = false;
+
+            currentReceivingStream = stream;
 
             // clear receiving queue
             recvQueue.Clear();
@@ -331,6 +337,14 @@ namespace Std.Tweak.Streaming
         {
             if (streamReceiver != null)
                 streamReceiver.Abort();
+            if (currentReceivingStream != null)
+            {
+                try
+                {
+                    currentReceivingStream.Dispose();
+                }
+                catch { }
+            }
             streamReceiver = null;
             Disposed = true;
             GC.SuppressFinalize(this);
