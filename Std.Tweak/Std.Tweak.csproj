@@ -63,7 +63,9 @@
     <Compile Include="Exceptions\OAuthNotValidatedException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchApi.cs" />
+    <Compile Include="Streaming\StreamingConnection.cs" />
     <Compile Include="Streaming\StreamingController.cs" />
+    <Compile Include="Streaming\StreamingCore.cs" />
     <Compile Include="ThirdParty\Pckles.cs" />
     <Compile Include="ThirdParty\Twitpic.cs" />
     <Compile Include="TwitterDirectMessage.cs" />

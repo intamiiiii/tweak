@@ -13,6 +13,7 @@ namespace Std.Tweak.Streaming
     /// <summary>
     /// Streaming controller class
     /// </summary>
+    [Obsolete("Use StreamingCore class.")]
     public class StreamingController : IDisposable
     {
         #region Factory and constructor
