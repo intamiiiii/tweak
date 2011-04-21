@@ -52,6 +52,9 @@ namespace Std.Network
             set { ServicePointManager.Expect100Continue = value; }
         }
 
+        /// <summary>
+        /// HTTP parallel connection limit
+        /// </summary>
         public static int MaxConnectionLimit
         {
             get { return ServicePointManager.DefaultConnectionLimit; }
